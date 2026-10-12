@@ -71,6 +71,11 @@ def to_markdown(report: dict, log: EventLog) -> str:
             lines += [f"- {f.text} [{', '.join(f.cites)}]" for f in d.possible_causes]
         if d.next_actions:
             lines += ["", "**Suggested investigation**:"] + [f"- {f.text} [{', '.join(f.cites)}]" for f in d.next_actions]
+        mx = item.get("model_explanation")
+        if mx:
+            lines += ["", f"**Model explanation** ({mx.get('model', 'model')}; only sentences citing verdict evidence "
+                      f"are kept, {mx.get('dropped_uncited', 0)} dropped):"]
+            lines += [f"- {x['text']}" for x in mx.get("sentences", [])] or [f"- (none: {mx.get('error', 'no cited sentences')})"]
         others = [f for f in r.findings if f != d.first_violation]
         if v == "fail" and others:
             lines += ["", f"{len(others)} more finding(s): " + "; ".join(f.message for f in others)]

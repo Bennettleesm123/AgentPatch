@@ -64,10 +64,10 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="behavtest", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def live(sp):
+    def live(sp, cap=40):
         sp.add_argument("--gemini", action="store_true", help="use Gemini Flash-Lite (live, needs --approve-live)")
         sp.add_argument("--approve-live", action="store_true", help="explicitly allow live model requests")
-        sp.add_argument("--max-calls", type=int, default=40, help="hard cap on model calls for this command")
+        sp.add_argument("--max-calls", type=int, default=cap, help="hard cap on model calls for this command")
 
     def source(sp):
         sp.add_argument("--trace", help="canonical agenteval trace JSON")
@@ -92,7 +92,7 @@ def main(argv=None) -> int:
             sp.add_argument("--explain", action="store_true", help="add a Gemini explanation (needs --approve-live)")
     b = sub.add_parser("benchmark", help="accuracy benchmark over cases/ground_truth.json")
     b.add_argument("--out", default=str(OUT))
-    live(b)
+    live(b, cap=60)
     args = p.parse_args(argv)
 
     if args.cmd == "compile":
@@ -128,8 +128,7 @@ def main(argv=None) -> int:
         return {"pass": 0, "fail": 1}.get(report["overall"], 3)
     if args.cmd == "benchmark":
         compiler, client = _compiler(args)
-        usage = client.usage() if client else None
-        res = run_benchmark(compiler, model_usage=usage)
+        res = run_benchmark(compiler)
         if client:
             res["model_usage"] = client.usage()
         jp, mp = write_benchmark(res, Path(args.out))
