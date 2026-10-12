@@ -111,7 +111,8 @@ class AgentRun:
                 self.tool_attempts += 1
                 entry["attempts"] += 1
                 n = entry["attempts"]
-                with self.tracer.span(f"{name}.attempt_{n}", "tool_attempt", attributes={"agenteval.attempt": n}) as att:
+                with self.tracer.span(f"{name}.attempt_{n}", "tool_attempt", input=args,
+                                      attributes={"agenteval.attempt": n}) as att:
                     try:
                         result = _with_timeout(lambda: call_tool(self.ctx, name, args), self.limits.tool_timeout_s,
                                                ToolTimeoutError, name)

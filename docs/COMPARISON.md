@@ -40,6 +40,11 @@ hands-on observations: fill them in during manual review, because no hosted uplo
   means "the task crashed", not "a check failed". Failed checks are feedback scores, so filter on
   `no_unauthorized_writes < 1` instead. This was not obvious to a beginner. Keyword and error-message
   search works but feels complicated, and it didn't surface the error being looked for.
+- **Needle test (`noisy`, find the one 429):** not found, and it took longer than in Braintrust. In the
+  compare view the trace column is so narrow it shows only icons and durations, with no span names and no
+  visible error markers. Opening the trace on its own or using the trace Filter box is required.
+- **Trace + feedback together (both platforms):** viewing the trace and the scores side by side gets
+  cramped, and neither links "this check failed" to "this span caused it".
 - **Experiment-row traces** were nearly empty in the first run. Fixed: each row now contains the full
   nested agent trace, and its output starts with a plain `summary` (decision, tools called, tool errors).
 
@@ -57,7 +62,10 @@ hands-on observations: fill them in during manual review, because no hosted uplo
     shown as +26,400%.
   - Increases in `llm_calls` and `tool_calls` are labelled "improvements".
   - The offline token counts are estimates, so ignore token regressions in this test.
-- **Preference:** the LangSmith UI felt nicer. Both did essentially the same job, and both offer an AI
+- **Needle test (`noisy`, find the one 429):** found quickly. Failed attempts carry red error icons
+  inline in the span tree, and the selected span opens a red Error box with the message. The UI feels
+  "alert": it points you at problems.
+- **Preference:** the LangSmith UI felt nicer overall. Both did essentially the same job, and both offer an AI
   assistant for analysing traces.
 
 Sources:
