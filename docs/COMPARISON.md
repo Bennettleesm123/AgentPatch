@@ -68,7 +68,14 @@ hands-on observations: fill them in during manual review, because no hosted uplo
 - **Preference:** the LangSmith UI felt nicer overall. Both did essentially the same job, and both offer an AI
   assistant for analysing traces.
 
-### Opik (2026-10-12, Opik's demo project; agenteval-lab data still to be uploaded)
+### Opik (2026-10-12)
+
+- **Navigation (agenteval-lab data):** after the native eval there was no obvious jump to the
+  experiment, so you had to navigate Datasets → Experiments. The SDK does return `experiment_url`, but
+  this repo's adapter didn't print it at first (fixed). Even so, the path from dataset to experiment to
+  compare felt less direct than in LangSmith or Braintrust.
+
+Earlier notes from Opik's demo project:
 
 - **UI:** liked overall. The Logs view has an error-rate tile and a "With errors" filter, and errored
   traces surface first.
