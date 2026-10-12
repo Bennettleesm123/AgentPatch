@@ -110,8 +110,8 @@ Earlier notes from Opik's demo project:
 - **Ordering quirk:** the conversation list shows tool calls out of order, because the event sends no
   per-call timestamps (field names are undocumented). The trace timeline is in the correct order.
 - **UI:** nice-looking, with an agent-first home page ("What can I do for you?" Triage Agent, signals,
-  issues). But it's overwhelming, with a lot of information at once. Useful for agent eval and testing,
-  not beginner-friendly.
+  issues). The UI is clean and simple, but it's overwhelming, with a lot of information at once. Useful
+  for AI engineers doing agent eval and testing, not beginner-friendly.
 
 ## Cross-platform themes (hands-on)
 
