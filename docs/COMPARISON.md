@@ -43,6 +43,23 @@ hands-on observations: fill them in during manual review, because no hosted uplo
 - **Experiment-row traces** were nearly empty in the first run. Fixed: each row now contains the full
   nested agent trace, and its output starts with a plain `summary` (decision, tools called, tool errors).
 
+### Braintrust (2026-10-12)
+
+- **Native eval:** matches local results exactly. The candidate gains one case on `conflict_handling`
+  and `decision_correct` and loses one on `no_unauthorized_writes` and `tool_sequence`. The experiment
+  table shows a red/green diff per row, making the regressed row (unauthorized) easy to spot.
+- **Terminal summary:** `Eval()` prints "N improvements, N regressions" per score against the base
+  experiment. This was the only platform giving a plain-language summary without opening the UI.
+- **Derived metrics:** it computed `llm_calls`, `tool_calls`, `errors` and `tool_errors` from the
+  nested spans, and flagged the denied write as a `tool_errors` regression.
+- **Confusing metrics:**
+  - Token % deltas don't match the averages: prompt tokens went 1370 → 1634 (about +19%) but were
+    shown as +26,400%.
+  - Increases in `llm_calls` and `tool_calls` are labelled "improvements".
+  - The offline token counts are estimates, so ignore token regressions in this test.
+- **Preference:** the LangSmith UI felt nicer. Both did essentially the same job, and both offer an AI
+  assistant for analysing traces.
+
 Sources:
 - LangSmith: [annotate-code](https://docs.langchain.com/langsmith/annotate-code), [log-llm-trace](https://docs.langchain.com/langsmith/log-llm-trace), [evaluate](https://docs.langchain.com/langsmith/evaluate-llm-application), [OTel](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [pricing](https://www.langchain.com/pricing)
 - Opik: [docs](https://www.comet.com/docs/opik), [SDK source](https://github.com/comet-ml/opik/tree/main/sdks/python), [pricing](https://www.comet.com/site/pricing/)
