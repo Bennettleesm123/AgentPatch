@@ -46,14 +46,14 @@ class GeminiModel:
                                                                            response=content)))
                 continue
             if pending:
-                out.append(t.Content(role="tool", parts=pending))
+                out.append(t.Content(role="user", parts=pending))
                 pending = []
             if m["role"] == "user":
                 out.append(t.Content(role="user", parts=[t.Part.from_text(text=m["content"])]))
             else:
                 out.append(m["raw"])
         if pending:
-            out.append(t.Content(role="tool", parts=pending))
+            out.append(t.Content(role="user", parts=pending))
         return out
 
     def generate(self, system: str, messages: list[dict], tools: list[dict]) -> ModelResponse:

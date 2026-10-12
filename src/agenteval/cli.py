@@ -41,6 +41,8 @@ def _print_runs(records: list[dict]) -> None:
     for r in records:
         print(f"{r['case_id']:<18} {r['config']:<10} {r['status']:<15} {str((r['final'] or {}).get('decision')):<14} "
               f"{r['tool_attempts']:>5} {r['llm_turns']:>5} {r['latency_ms']:>8.1f}  {r['trace_path']}")
+        if r["status"] != "completed":
+            print(f"  -> {(r['final'] or {}).get('reason') or r['limit_hit']}")
 
 
 def _print_report(report: dict) -> None:

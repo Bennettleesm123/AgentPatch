@@ -64,7 +64,7 @@ def test_gemini_tool_calling_loop(monkeypatch, out_dir):
     assert len(reqs) == 5  # one 503 retried, then four turns
     _, contents, cfg = reqs[-1]
     assert cfg.automatic_function_calling.disable is True
-    assert [c.role for c in contents] == ["user", "model", "tool", "model", "tool", "model", "tool"]
+    assert [c.role for c in contents] == ["user", "model", "user", "model", "user", "model", "user"]
     fr = contents[2].parts[0].function_response
     assert fr.name == "search_company" and fr.id == "c1" and fr.response["results"]
     assert contents[4].parts[0].function_response.id is None
