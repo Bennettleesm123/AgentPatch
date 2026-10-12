@@ -37,6 +37,21 @@ def test_raindrop_otlp_payload(trace):
     assert sum("parentSpanId" not in s for s in spans) == 1
 
 
+def test_raindrop_event_links_to_trace(trace):
+    from agenteval.providers.raindrop import to_event
+
+    event = to_event(trace)
+    assert event["event_id"] == trace["run_id"] and event["user_id"] == "agenteval-lab"
+    calls = event["ai_data"]["tool_calls"]
+    assert [c["status"] for c in calls] == ["ok", "error", "error", "ok", "ok"]
+    assert calls[1]["name"] == "get_company_details" and "timed out" in calls[1]["error"]
+    assert calls[1]["arguments"] == {"company_id": "GLBX-001"}
+    assert event["ai_data"]["input"].startswith("Research the company")
+    for span in to_otlp(trace)["resourceSpans"][0]["scopeSpans"][0]["spans"]:
+        keys = {a["key"]: a["value"] for a in span["attributes"]}
+        assert keys["traceloop.association.properties.event_id"] == {"stringValue": trace["run_id"]}
+
+
 def test_raindrop_native_eval_unsupported():
     with pytest.raises(NativeEvalUnsupported):
         get_adapter("raindrop").native_eval(None, [], [])
