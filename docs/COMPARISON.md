@@ -103,7 +103,12 @@ Earlier notes from Opik's demo project:
 - **Setup gotcha:** OTLP traces were accepted (HTTP 200) but nothing appeared, with 0 events in the
   dashboard. Raindrop's UI is built on *events* (`POST /v1/events/track`), and raw traces don't create
   them. The adapter now sends one event per run and links its spans through
-  `traceloop.association.properties.event_id`. Re-upload is pending.
+  `traceloop.association.properties.event_id`. After that change, all 3 runs appeared.
+- **Error surfacing:** automatic. It created one TOOL signal per failing tool without any setup. Failed
+  attempts are listed in red, and the timeline shows error counts per tool. The 429 needle was found
+  quickly.
+- **Ordering quirk:** the conversation list shows tool calls out of order, because the event sends no
+  per-call timestamps (field names are undocumented). The trace timeline is in the correct order.
 - **UI:** nice-looking, with an agent-first home page ("What can I do for you?" Triage Agent, signals,
   issues). But it's overwhelming, with a lot of information at once. Useful for agent eval and testing,
   not beginner-friendly.
