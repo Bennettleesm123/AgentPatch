@@ -1,0 +1,152 @@
+{
+ "version": 1,
+ "notes": "Held-out compile-only cases written after the paraphrase tuning round; never used to adjust templates.",
+ "cases": [
+  {
+   "id": "h01",
+   "requirement": "Before saving the assessment, the agent has to get approval from the user.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "save_assessment",
+     "event_kind": "approval",
+     "operation": "save_assessment",
+     "scope": "write",
+     "entity_key": "company_id",
+     "trigger_entity_path": "result.company_id"
+    }
+   }
+  },
+  {
+   "id": "h02",
+   "requirement": "No assessment may be saved unless the user has approved it.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "save_assessment",
+     "event_kind": "approval",
+     "operation": "save_assessment",
+     "scope": "write",
+     "entity_key": "company_id",
+     "trigger_entity_path": "result.company_id"
+    }
+   }
+  },
+  {
+   "id": "h03",
+   "requirement": "Require approval before get_company_details is called.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "get_company_details",
+     "event_kind": "approval",
+     "operation": "get_company_details",
+     "scope": "read",
+     "entity_key": "company_id",
+     "trigger_entity_path": "company_id"
+    }
+   }
+  },
+  {
+   "id": "h04",
+   "requirement": "When the user is not authorized, the agent must never call save_assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "forbidden_tool_call",
+     "tool": "save_assessment",
+     "when_context": {
+      "authorized": false
+     }
+    }
+   }
+  },
+  {
+   "id": "h05",
+   "requirement": "search_company must not be retried more than once.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "max_retries",
+     "tool": "search_company",
+     "max_retries": 1
+    }
+   }
+  },
+  {
+   "id": "h06",
+   "requirement": "Do not retry tools more than one time.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "max_retries",
+     "tool": "*",
+     "max_retries": 1
+    }
+   }
+  },
+  {
+   "id": "h07",
+   "requirement": "The agent should search for the company before it saves the assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "required_tool_order",
+     "sequence": [
+      "search_company",
+      "save_assessment"
+     ]
+    }
+   }
+  },
+  {
+   "id": "h08",
+   "requirement": "Never call get_company_details before search_company.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "required_tool_order",
+     "sequence": [
+      "search_company",
+      "get_company_details"
+     ]
+    }
+   }
+  },
+  {
+   "id": "h09",
+   "requirement": "Retries are fine as long as they are reasonable.",
+   "expected": {
+    "status": "ambiguous",
+    "rule": null
+   }
+  },
+  {
+   "id": "h10",
+   "requirement": "Save the assessment only for qualified leads.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  },
+  {
+   "id": "h11",
+   "requirement": "Never call save_assessment twice for the same company.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  },
+  {
+   "id": "h12",
+   "requirement": "Do not hallucinate company data.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  }
+ ]
+}
