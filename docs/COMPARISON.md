@@ -98,6 +98,28 @@ Earlier notes from Opik's demo project:
 - **To do:** needle test and native eval on agenteval-lab data, and ask Ollie to explain the
   baseline → candidate regression.
 
+### Raindrop (2026-10-12)
+
+- **Setup gotcha:** OTLP traces were accepted (HTTP 200) but nothing appeared, with 0 events in the
+  dashboard. Raindrop's UI is built on *events* (`POST /v1/events/track`), and raw traces don't create
+  them. The adapter now sends one event per run and links its spans through
+  `traceloop.association.properties.event_id`. Re-upload is pending.
+- **UI:** nice-looking, with an agent-first home page ("What can I do for you?" Triage Agent, signals,
+  issues). But it's overwhelming, with a lot of information at once. Useful for agent eval and testing,
+  not beginner-friendly.
+
+## Cross-platform themes (hands-on)
+
+1. **Built for ML engineers, not beginners.** Every platform needed platform-specific knowledge to
+   answer "what went wrong?". Examples: Status vs. feedback-score filters, navigating to experiments, and
+   OTLP vs. events.
+2. **No link from a failed check to the span that caused it.** Viewing the trace and the scores together
+   is cramped everywhere.
+3. **Detail overload.** Full traces suit AI reviewers reading JSON through the API or MCP, but are too
+   much as a human's default view. Humans want verdict → failed check → causing span → raw detail.
+4. **AI assistants are converging on the answer** (Ollie, Braintrust's assistant, Raindrop's Triage
+   Agent), but none shows how accurate its explanations are.
+
 Sources:
 - LangSmith: [annotate-code](https://docs.langchain.com/langsmith/annotate-code), [log-llm-trace](https://docs.langchain.com/langsmith/log-llm-trace), [evaluate](https://docs.langchain.com/langsmith/evaluate-llm-application), [OTel](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [pricing](https://www.langchain.com/pricing)
 - Opik: [docs](https://www.comet.com/docs/opik), [SDK source](https://github.com/comet-ml/opik/tree/main/sdks/python), [pricing](https://www.comet.com/site/pricing/)
