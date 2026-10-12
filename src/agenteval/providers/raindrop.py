@@ -18,6 +18,7 @@ NAME = "raindrop"
 ENV = ("RAINDROP_WRITE_KEY",)
 DOCS = "https://raindrop.ai/docs"
 ENDPOINT = "https://api.raindrop.ai/v1/traces"
+NATIVE_EVAL = False
 
 
 def _attr(key: str, value) -> dict:

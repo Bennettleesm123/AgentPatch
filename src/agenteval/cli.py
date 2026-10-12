@@ -143,6 +143,12 @@ def _native_eval(args) -> int:
     from .providers.base import MAX_EVAL_ROWS, Ledger
 
     adapter = get_adapter(args.native)
+    if not getattr(adapter, "NATIVE_EVAL", True):
+        try:
+            adapter.native_eval({}, [])
+        except NativeEvalUnsupported as exc:
+            print(f"[native:{args.native}] not available: {exc}")
+        return 0
     case_ids = [c.id for c in get_cases(args.case)]
     configs = args.config.split(",")
     rows = len(case_ids) * len(configs)
