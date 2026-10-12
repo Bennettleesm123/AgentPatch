@@ -18,10 +18,26 @@ hands-on observations: fill them in during manual review, because no hosted uplo
 | Dataset creation | `create_dataset` + `create_examples` (inputs/outputs) | `get_or_create_dataset` + `insert` (items are versioned on insert) | Inline `data=` list, or `init_dataset().insert` | Datasets exist; free-plan availability unverified |
 | Native evaluation setup | `Client.evaluate(target, data, evaluators=[fn(inputs, outputs)])` | `opik.evaluation.evaluate(dataset, task, scoring_metrics=[BaseMetric])` | `Eval(project, data, task, scores=[fn(input, output, expected)])` | No code-scorer harness. Signals are LLM-drafted classifiers or presets; replay evals need a hosted TypeScript endpoint |
 | Regression comparison | UI Compare across experiments (red/green vs a chosen baseline) | UI experiment compare (exact click path unverified) | `base_experiment_name` gives per-score improvements/regressions in the SDK summary and UI | Experiments compare signal rates between cohorts, but need the Pro plan |
+| Built-in AI analysis of traces | Side-panel assistant needs your own model API key (observed) | **(measure)** | **(measure)** | Triage Agent, 15 messages/mo on Hobby (docs) |
 | API / MCP accessibility | REST + SDK; hosted MCP `https://api.smith.langchain.com/mcp` | REST + SDK; `opik-mcp` package / hosted `.../opik/api/v1/mcp` | REST + SDK; hosted MCP `https://api.braintrust.dev/mcp` | REST + Query SDK; hosted MCP `https://mcp.raindrop.ai/mcp` |
 | OTLP ingestion (alternative) | `https://api.smith.langchain.com/otel` (`x-api-key`, `Langsmith-Project`) | `https://www.comet.com/opik/api/v1/private/otel` (`Authorization`, `Comet-Workspace`, `projectName`) | `https://api.braintrust.dev/otel` (`Authorization: Bearer`, `x-bt-parent`) | `https://api.raindrop.ai/v1/traces` (`Authorization: Bearer`) |
 | Error messages / UI issues | Offline: SDK logs `Failed to GET /info` and a compression warning, then continues. Hosted: **(measure)** | Offline: background batch processor logs failures but `trace()` still returns. Hosted: **(measure)** | Offline: lazy login fails at flush ("Dropping batch"). Hosted: **(measure)** | Offline: n/a (plain HTTP). Hosted: **(measure)** |
 | Free tier (no card required on any of them) | Developer: 1 seat, 5k base traces/mo, 14-day retention | Free cloud: 25k spans/mo, 60-day retention. Billed by span: ~11–13 spans per run here | Starter: 1 GB processed data, 10k scores/mo, 14-day retention | Hobby: 1,000 events/mo, 1 custom signal, no Experiments |
+
+## Hands-on observations
+
+### LangSmith (2026-10-12)
+
+- **Speed:** native eval of 2 experiments × 4 cases finished in under a second. No model calls are
+  involved, since recorded outputs are replayed.
+- **Compare view:** clear for one baseline against one candidate. With 3 or more experiments it is hard
+  to tell what changed and why, because the view shows score differences but no fixed/regressed summary.
+- **Trace navigation:** easy at about 11 spans per run. It will likely get cluttered with real agents
+  that produce dozens of tool calls; filtering and error-jumping should be tested with a noisy case.
+- **No automatic summary of failures:** the side assistant needs your own model API key. An alternative
+  is to point your own assistant at the platform's MCP server so it reads the full traces.
+- **Experiment-row traces** contain only the replay step. The detailed nested traces are under
+  Tracing Projects.
 
 Sources:
 - LangSmith: [annotate-code](https://docs.langchain.com/langsmith/annotate-code), [log-llm-trace](https://docs.langchain.com/langsmith/log-llm-trace), [evaluate](https://docs.langchain.com/langsmith/evaluate-llm-application), [OTel](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [pricing](https://www.langchain.com/pricing)
