@@ -118,7 +118,7 @@ def native_eval(run_fn, configs: list[str], case_ids: list[str]) -> dict:
 
     out = {}
     for config in configs:
-        res = evaluate(dataset=ds, task=task_for(config), scoring_metrics=[LocalEvaluator(name=n) for n in EVALUATORS],
+        res = evaluate(dataset=ds, task=task_for(config), scoring_metrics=[LocalEvaluator(name=n, track=False) for n in EVALUATORS],
                        experiment_name=f"native-{config}", project_name=_project(),
                        experiment_config={"config": config, "model": "scripted-v1 (offline)"}, task_threads=1)
         out[config] = {"experiment": res.experiment_name, "url": res.experiment_url}

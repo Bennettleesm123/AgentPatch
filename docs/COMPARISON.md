@@ -75,6 +75,14 @@ hands-on observations: fill them in during manual review, because no hosted uplo
   this repo's adapter didn't print it at first (fixed). Even so, the path from dataset to experiment to
   compare felt less direct than in LangSmith or Braintrust.
 
+- **Experiment-row trace:** clear nesting, with red warning triangles on the denied `save_assessment`
+  and the plain `summary` in the output panel. But a 4-turn run showed 23 spans, about a third of them
+  Opik tracing the scorer functions (`metrics_calculation`, `*_arg_validation`). The adapter now passes
+  `track=False` to the metrics to cut that noise.
+- **Data volume vs. reviewers:** full detail helps an AI reviewer that reads JSON through the API or
+  MCP, but is too much as a human's default view. Humans need verdict → failed check → causing span →
+  raw detail.
+
 Earlier notes from Opik's demo project:
 
 - **UI:** liked overall. The Logs view has an error-rate tile and a "With errors" filter, and errored
