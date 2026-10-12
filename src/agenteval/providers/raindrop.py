@@ -91,7 +91,7 @@ def upload(trace: dict) -> str:
         return f"HTTP {resp.status} trace_id={trace['trace_id']}"
 
 
-def native_eval(records, case_ids):
+def native_eval(run_fn, configs, case_ids):
     from . import NativeEvalUnsupported
 
     raise NativeEvalUnsupported(

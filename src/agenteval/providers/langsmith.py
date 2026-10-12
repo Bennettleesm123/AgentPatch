@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 
-from . import dataset_items, score
+from . import dataset_items, score, task_output
 from .base import as_dict, dt, span_metadata, trace_metadata, walk
 
 NAME = "langsmith"
@@ -46,39 +46,53 @@ def plan(trace: dict) -> list[dict]:
     return rows
 
 
-def upload(trace: dict) -> str:
-    from langsmith import Client
+def _replay(trace: dict, parent=None, client=None):
+    """Build the run tree for `trace`, as a new root or nested under `parent`, and post it."""
     from langsmith.run_trees import RunTree
 
-    client = Client()
     runs, root = {}, None
-    for span, parent in walk(trace):
+    for span, p in walk(trace):
         kw = _run_kwargs(span, trace)
-        if parent is None:
-            rt = root = RunTree(**kw, project_name=_project(), ls_client=client)
+        if p is None:
+            rt = root = (parent.create_child(**kw) if parent is not None
+                         else RunTree(**kw, project_name=_project(), ls_client=client))
         else:
-            rt = runs[parent["span_id"]].create_child(**kw)
+            rt = runs[p["span_id"]].create_child(**kw)
         if span["kind"] == "llm" and span["usage"]:
             rt.set(usage_metadata={k: span["usage"][k] for k in ("input_tokens", "output_tokens", "total_tokens")
                                    if k in span["usage"]})
         rt.end(outputs=as_dict(span["output"]), error=span["error"], end_time=dt(span["end_ns"]))
         runs[span["span_id"]] = rt
     root.post(exclude_child_runs=False)
+    return root
+
+
+def upload(trace: dict) -> str:
+    from langsmith import Client
+
+    client = Client()
+    root = _replay(trace, client=client)
     client.flush()
     return f"project={_project()} root_run_id={root.id}"
 
 
-def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dict:
-    """records: {config: {case_id: run_record}}. Replays recorded outputs; no model calls."""
+def native_eval(run_fn, configs: list[str], case_ids: list[str]) -> dict:
+    """run_fn(config, case_id) -> (record, trace) re-runs the offline agent inside each eval task."""
     from langsmith import Client
+    from langsmith.run_helpers import get_current_run_tree
+
+    from ..evals import EVALUATORS
 
     client = Client()
     if client.has_dataset(dataset_name=DATASET):
         ds = client.read_dataset(dataset_name=DATASET)
     else:
         ds = client.create_dataset(dataset_name=DATASET, description="AgentEvalLab synthetic lead-research cases")
+    have = {e.inputs.get("case_id") for e in client.list_examples(dataset_id=ds.id)}
+    missing = [i for i in dataset_items(case_ids) if i["input"]["case_id"] not in have]
+    if missing:
         client.create_examples(dataset_id=ds.id, examples=[
-            {"inputs": i["input"], "outputs": i["expected"], "metadata": i["metadata"]} for i in dataset_items(case_ids)])
+            {"inputs": i["input"], "outputs": i["expected"], "metadata": i["metadata"]} for i in missing])
 
     def make(name):
         def evaluator(inputs: dict, outputs: dict) -> dict:
@@ -87,14 +101,20 @@ def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dic
         evaluator.__name__ = name
         return evaluator
 
-    from ..evals import EVALUATORS
+    def target_for(config):
+        def target(inputs: dict) -> dict:
+            record, trace = run_fn(config, inputs["case_id"])
+            _replay(trace, parent=get_current_run_tree())
+            return task_output(record, trace)
+        return target
 
     out = {}
-    for config, by_case in records.items():
-        res = client.evaluate(lambda inputs, _b=by_case: _b[inputs["case_id"]], data=DATASET,
-                              evaluators=[make(n) for n in EVALUATORS], experiment_prefix=f"native-{config}",
-                              metadata={"config": config, "replay": "recorded offline outputs"}, max_concurrency=1)
+    for config in configs:
+        res = client.evaluate(target_for(config), data=DATASET, evaluators=[make(n) for n in EVALUATORS],
+                              experiment_prefix=f"native-{config}", max_concurrency=1,
+                              metadata={"config": config, "model": "scripted-v1 (offline)"})
         out[config] = res.experiment_name
     client.flush()
     return {"dataset": DATASET, "experiments": out,
-            "compare": "UI: Datasets & Experiments -> dataset -> select both experiments -> Compare"}
+            "compare": "UI: Datasets & Experiments -> dataset -> select both experiments -> Compare. "
+                       "Filter failures by feedback score (e.g. no_unauthorized_writes < 1), not Status."}

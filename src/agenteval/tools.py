@@ -120,6 +120,8 @@ def call_tool(ctx: ToolContext, name: str, args: dict) -> dict:
         time.sleep(ctx.fault_delay_s)
     elif fault == "error":
         raise TransientToolError("503 Service Unavailable (synthetic upstream outage)")
+    elif fault == "ratelimit":
+        raise TransientToolError("429 Too Many Requests (synthetic CRM write quota)")
     try:
         return fn(ctx, **(args or {}))
     except TypeError as exc:

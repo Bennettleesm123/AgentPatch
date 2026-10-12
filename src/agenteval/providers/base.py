@@ -12,7 +12,7 @@ from pathlib import Path
 
 LEDGER = Path("artifacts/upload_ledger.json")
 MAX_TRACE_UPLOADS = 3
-MAX_EVAL_ROWS = 8
+MAX_EVAL_ROWS = 30  # cumulative per provider: three full native-eval runs (5 cases x 2 configs)
 
 
 def span_tree(trace: dict) -> tuple[dict, dict[str, list[dict]]]:

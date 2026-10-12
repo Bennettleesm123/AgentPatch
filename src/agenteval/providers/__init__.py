@@ -35,6 +35,25 @@ def dataset_items(case_ids: list[str]) -> list[dict]:
     return items
 
 
-def score(evaluator: str, record: dict) -> dict:
-    """Run one deterministic local evaluator inside a provider's eval harness."""
+def score(evaluator: str, output: dict) -> dict:
+    """Run one deterministic local evaluator on a task output produced by `task_output`."""
+    record = output["record"]
     return EVALUATORS[evaluator](record, CASES_BY_ID[record["case_id"]])
+
+
+def task_output(record: dict, trace: dict) -> dict:
+    """What every provider's eval task returns: a readable summary first, the full record for scoring."""
+    errors = [f"{s['name']}: {s['error']}" for s in trace["spans"]
+              if s["error"] and s["kind"] in ("tool", "tool_attempt")]
+    final = record["final"] or {}
+    return {
+        "summary": {
+            "status": record["status"],
+            "decision": final.get("decision"),
+            "tools_called": [c["name"] for c in record["tool_calls"]],
+            "tool_errors": errors,
+            "writes": len(record["writes"]),
+            "denied_writes": len(record["denied_writes"]),
+        },
+        "record": record,
+    }

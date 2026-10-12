@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 
-from . import dataset_items, score
+from . import dataset_items, score, task_output
 from .base import as_dict, dt, span_metadata, trace_metadata, walk
 
 NAME = "opik"
@@ -60,24 +60,34 @@ def upload(trace: dict) -> str:
     import opik
 
     client = opik.Opik(project_name=_project())
-    objs = {}
-    for span, parent in walk(trace):
-        kw = _span_kwargs(span)
-        if parent is None:
-            obj = client.trace(name=kw["name"], start_time=kw["start_time"], end_time=kw["end_time"],
-                               input=kw["input"], output=kw["output"], error_info=kw["error_info"],
-                               metadata=kw["metadata"] | trace_metadata(trace),
-                               tags=[trace["config"], trace["case_id"], trace["mode"]])
-        else:
-            obj = objs[parent["span_id"]].span(**kw)
-        objs[span["span_id"]] = obj
+    root = _replay(trace, client)
     client.flush()
-    root = next(iter(objs.values()))
     return f"project={_project()} trace_id={root.id}"
 
 
-def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dict:
+def _replay(trace: dict, client, trace_id: str | None = None, parent_span_id: str | None = None):
+    """Log `trace` as a new Opik trace, or as spans under an existing trace/span when trace_id is given."""
+    objs, root = {}, None
+    for span, parent in walk(trace):
+        kw = _span_kwargs(span)
+        if parent is None and trace_id is None:
+            obj = root = client.trace(name=kw["name"], start_time=kw["start_time"], end_time=kw["end_time"],
+                                      input=kw["input"], output=kw["output"], error_info=kw["error_info"],
+                                      metadata=kw["metadata"] | trace_metadata(trace),
+                                      tags=[trace["config"], trace["case_id"], trace["mode"]])
+        elif parent is None:
+            obj = root = client.span(trace_id=trace_id, parent_span_id=parent_span_id,
+                                     **kw | {"metadata": kw["metadata"] | trace_metadata(trace)})
+        else:
+            obj = objs[parent["span_id"]].span(**kw)
+        objs[span["span_id"]] = obj
+    return root
+
+
+def native_eval(run_fn, configs: list[str], case_ids: list[str]) -> dict:
+    """run_fn(config, case_id) -> (record, trace) re-runs the offline agent inside each eval task."""
     import opik
+    from opik import opik_context
     from opik.evaluation import evaluate
     from opik.evaluation.metrics import base_metric, score_result
 
@@ -85,7 +95,21 @@ def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dic
 
     client = opik.Opik(project_name=_project())
     ds = client.get_or_create_dataset(name=DATASET, description="AgentEvalLab synthetic lead-research cases")
-    ds.insert([{"input": i["input"], "expected_output": i["expected"], **i["metadata"]} for i in dataset_items(case_ids)])
+    have = {(item.get("input") or {}).get("case_id") for item in ds.get_items()}
+    missing = [i for i in dataset_items(case_ids) if i["input"]["case_id"] not in have]
+    if missing:
+        ds.insert([{"input": i["input"], "expected_output": i["expected"], **i["metadata"]} for i in missing])
+
+    def task_for(config):
+        def task(item: dict) -> dict:
+            record, trace = run_fn(config, item["input"]["case_id"])
+            span, tr = opik_context.get_current_span_data(), opik_context.get_current_trace_data()
+            if span is not None:
+                _replay(trace, client, trace_id=span.trace_id, parent_span_id=span.id)
+            elif tr is not None:
+                _replay(trace, client, trace_id=tr.id)
+            return {"output": task_output(record, trace)}
+        return task
 
     class LocalEvaluator(base_metric.BaseMetric):
         def score(self, output, **ignored):
@@ -93,11 +117,10 @@ def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dic
             return score_result.ScoreResult(name=self.name, value=r["score"], reason=r["detail"])
 
     out = {}
-    for config, by_case in records.items():
-        res = evaluate(dataset=ds, task=lambda item, _b=by_case: {"output": _b[item["input"]["case_id"]]},
-                       scoring_metrics=[LocalEvaluator(name=n) for n in EVALUATORS],
+    for config in configs:
+        res = evaluate(dataset=ds, task=task_for(config), scoring_metrics=[LocalEvaluator(name=n) for n in EVALUATORS],
                        experiment_name=f"native-{config}", project_name=_project(),
-                       experiment_config={"config": config, "replay": "recorded offline outputs"}, task_threads=1)
+                       experiment_config={"config": config, "model": "scripted-v1 (offline)"}, task_threads=1)
         out[config] = res.experiment_name
     client.flush()
     return {"dataset": DATASET, "experiments": out,

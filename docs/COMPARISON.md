@@ -1,6 +1,6 @@
 # Platform comparison: LangSmith, Opik, Braintrust, Raindrop
 
-All four platforms receive the same canonical traces and the same 4-case dataset. Integration facts
+All four platforms receive the same canonical traces and the same 5-case dataset. Integration facts
 below come from the official docs and SDK source, checked in Oct 2026 against `langsmith` 0.14.7,
 `opik` 2.2.98, `braintrust` 0.45.0 and `raindrop-ai` 0.0.75. Rows marked **(measure)** are
 hands-on observations: fill them in during manual review, because no hosted upload has been made yet
@@ -36,8 +36,12 @@ hands-on observations: fill them in during manual review, because no hosted uplo
   that produce dozens of tool calls; filtering and error-jumping should be tested with a noisy case.
 - **No automatic summary of failures:** the side assistant needs your own model API key. An alternative
   is to point your own assistant at the platform's MCP server so it reads the full traces.
-- **Experiment-row traces** contain only the replay step. The detailed nested traces are under
-  Tracing Projects.
+- **Filtering gotcha:** the compare view's "Status is error" filter returned nothing, because Status
+  means "the task crashed", not "a check failed". Failed checks are feedback scores, so filter on
+  `no_unauthorized_writes < 1` instead. This was not obvious to a beginner. Keyword and error-message
+  search works but feels complicated, and it didn't surface the error being looked for.
+- **Experiment-row traces** were nearly empty in the first run. Fixed: each row now contains the full
+  nested agent trace, and its output starts with a plain `summary` (decision, tools called, tool errors).
 
 Sources:
 - LangSmith: [annotate-code](https://docs.langchain.com/langsmith/annotate-code), [log-llm-trace](https://docs.langchain.com/langsmith/log-llm-trace), [evaluate](https://docs.langchain.com/langsmith/evaluate-llm-application), [OTel](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [pricing](https://www.langchain.com/pricing)
@@ -47,7 +51,7 @@ Sources:
 
 ## Manual review procedure (same runs on every platform)
 
-Budget: at most 3 trace uploads and 8 native-eval rows per provider. The ledger is
+Budget: at most 3 trace uploads and 30 native-eval rows per provider (one native-eval run uses 10). The ledger is
 `artifacts/upload_ledger.json`.
 
 1. **Prepare (offline).** Run `uv run agenteval compare` and `uv run agenteval trace --provider all
@@ -79,4 +83,8 @@ Budget: at most 3 trace uploads and 8 native-eval rows per provider. The ledger 
 7. **Optional live run:** run `uv run agenteval run --gemini --case normal --approve-live`, then
    `trace --from-file artifacts/traces/baseline__normal__gemini.json` to compare real token usage
    across UIs. This counts toward the 3-trace cap.
-8. **Note friction:** record onboarding time, confusing errors and UI issues in the **(measure)** cells.
+8. **Needle test (clutter):** upload or native-eval the `noisy` case. It has 16 spans, 5 failed
+   attempts, and exactly one `429 Too Many Requests`. Time how long it takes to find the 429 span and
+   note which UI features helped (search, error filter, collapse). Then try finding "which case
+   regressed" in a compare view with 3 or more experiments.
+9. **Note friction:** record onboarding time, confusing errors and UI issues in the **(measure)** cells.

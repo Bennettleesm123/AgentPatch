@@ -7,7 +7,8 @@
 | 3. Deterministic evals and regression comparison | done (scenario 5 detected) |
 | 4. Optional Gemini integration | done; tested against a fake client, never called live |
 | 5. LangSmith, Opik, Braintrust, Raindrop adapters | done; dry-run plans tested, SDK calls checked offline with sockets blocked |
-| 6. README and comparison guide | done; hands-on **(measure)** cells pending |
+| 6. README and comparison guide | done; LangSmith hands-on notes recorded, other platforms pending |
+| 7. Noisy "needle" case and full traces in native-eval rows | done; LangSmith checked offline via `evaluate(upload_results=False)` |
 
 Test suite: `uv run pytest`, fully offline.
 

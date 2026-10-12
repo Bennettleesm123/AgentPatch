@@ -39,7 +39,7 @@ def test_raindrop_otlp_payload(trace):
 
 def test_raindrop_native_eval_unsupported():
     with pytest.raises(NativeEvalUnsupported):
-        get_adapter("raindrop").native_eval({}, [])
+        get_adapter("raindrop").native_eval(None, [], [])
 
 
 def test_dataset_items_identical_shape():

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 
-from . import dataset_items, score
+from . import dataset_items, score, task_output
 from .base import span_metadata, trace_metadata, walk
 
 NAME = "braintrust"
@@ -50,22 +50,29 @@ def upload(trace: dict) -> str:
     import braintrust
 
     logger = braintrust.init_logger(project=_project(), set_current=False)
+    root = _replay(trace, logger)
+    logger.flush()
+    return f"project={_project()} root_span_id={getattr(root, 'root_span_id', root.id)}"
+
+
+def _replay(trace: dict, owner):
+    """Log `trace` as spans under `owner` (a Logger for a new trace, or a Span to nest under)."""
     open_spans, order = {}, []
     for span, parent in walk(trace):
-        owner = logger if parent is None else open_spans[parent["span_id"]]
-        bt = owner.start_span(name=span["name"], type=SPAN_TYPES.get(span["kind"], "function"),
-                              start_time=span["start_ns"] / 1e9, set_current=False)
+        parent_obj = owner if parent is None else open_spans[parent["span_id"]]
+        bt = parent_obj.start_span(name=span["name"], type=SPAN_TYPES.get(span["kind"], "function"),
+                                   start_time=span["start_ns"] / 1e9, set_current=False)
         bt.log(**_log_kwargs(span, trace))
         open_spans[span["span_id"]] = bt
         order.append(span)
     for span in reversed(order):  # children close before parents
         open_spans[span["span_id"]].end(end_time=span["end_ns"] / 1e9)
-    logger.flush()
-    root = open_spans[order[0]["span_id"]]
-    return f"project={_project()} root_span_id={getattr(root, 'root_span_id', root.id)}"
+    return open_spans[order[0]["span_id"]]
 
 
-def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dict:
+def native_eval(run_fn, configs: list[str], case_ids: list[str]) -> dict:
+    """run_fn(config, case_id) -> (record, trace) re-runs the offline agent inside each eval task."""
+    import braintrust
     from braintrust import Eval, Score
 
     from ..evals import EVALUATORS
@@ -77,13 +84,19 @@ def native_eval(records: dict[str, dict[str, dict]], case_ids: list[str]) -> dic
         scorer.__name__ = name
         return scorer
 
+    def task_for(config):
+        def task(input):
+            record, trace = run_fn(config, input["case_id"])
+            _replay(trace, braintrust.current_span())
+            return task_output(record, trace)
+        return task
+
     data = dataset_items(case_ids)
     out, base_name = {}, None
-    for config, by_case in records.items():
-        res = Eval(_project(), data=lambda: data, task=lambda input, _b=by_case: _b[input["case_id"]],
-                   scores=[make(n) for n in EVALUATORS], experiment_name=f"native-{config}",
-                   metadata={"config": config, "replay": "recorded offline outputs"},
-                   base_experiment_name=base_name)
+    for config in configs:
+        res = Eval(_project(), data=lambda: data, task=task_for(config), scores=[make(n) for n in EVALUATORS],
+                   experiment_name=f"native-{config}", max_concurrency=1,
+                   metadata={"config": config, "model": "scripted-v1 (offline)"}, base_experiment_name=base_name)
         base_name = res.summary.experiment_name
         out[config] = {"experiment": base_name, "url": res.summary.experiment_url}
     return {"project": _project(), "experiments": out,

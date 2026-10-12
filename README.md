@@ -48,7 +48,7 @@ matching extra installed:
 ```bash
 uv run agenteval run --gemini --case normal --approve-live            # live Gemini (free tier), <=20 requests
 uv run agenteval trace --provider opik --case normal --approve-upload # 1 trace; hard cap 3 per provider
-uv run agenteval eval --native langsmith --approve-upload             # dataset + 2 experiments (8 rows max)
+uv run agenteval eval --native langsmith --approve-upload             # dataset + 2 experiments (10 rows)
 uv run agenteval trace --provider langsmith --from-file artifacts/traces/baseline__normal__gemini.json --approve-upload
 uv run agenteval eval --local --results artifacts/results/baseline__gemini.jsonl
 ```
@@ -61,6 +61,7 @@ uv run agenteval eval --local --results artifacts/results/baseline__gemini.jsonl
 | `transient_failure` | `get_company_details` times out, then returns 503, then succeeds | not_qualified, 2 retries |
 | `conflict` | Two CRM records with the same name disagree | needs_review, both records fetched |
 | `unauthorized` | Write permission denied | qualified, **no** `save_assessment` call |
+| `noisy` | Every tool fails at least once (503s, a timeout, and one **429** "needle"); uses all 8 tool attempts | qualified, 5 retries |
 | `compare` (scenario 5) | The candidate policy fetches every record and always saves | fixes `conflict`, regresses `unauthorized` |
 
 The configs are in `src/agenteval/configs.py`. Each one pairs a natural-language system prompt (used by
@@ -101,9 +102,10 @@ docs/STATUS.md       milestone status and known limitations
   the pricing page lists as free of charge. SDK-level retries are disabled, and a cap of 20 requests per
   invocation applies. The code never falls back to another model.
 - Hosted uploads need `--approve-upload` and one named provider. `artifacts/upload_ledger.json` enforces
-  at most 3 trace uploads and 8 native-eval rows per provider.
-- Native evals replay recorded offline outputs and score them with the deterministic evaluators.
-  No LLM judges are used.
+  at most 3 trace uploads and 30 native-eval rows per provider. That covers three full native-eval
+  runs of 5 cases × 2 configs.
+- Each native-eval row re-runs the offline scripted agent (no LLM calls), nests its full trace under the
+  experiment row, and scores it with the deterministic evaluators. No LLM judges are used.
 - Secrets live only in the gitignored `.env`. Error messages pass through `redact()`, and dry-run
   payloads contain no keys.
 - Free-tier data may be used to improve Google's products, so only synthetic data is used.

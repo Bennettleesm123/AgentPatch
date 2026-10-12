@@ -50,6 +50,14 @@ COMPANIES: dict[str, dict] = {
         "employees": 900,
         "region": "EU",
     },
+    "HOOL-001": {
+        "company_id": "HOOL-001",
+        "name": "Hooli Holdings",
+        "domain": "hooli-holdings.example",
+        "industry": "fintech",
+        "employees": 3200,
+        "region": "NA",
+    },
 }
 
 CONFLICT_FIELDS = ("domain", "industry", "employees", "region")
@@ -134,6 +142,23 @@ CASES: tuple[Case, ...] = (
             company_id="UMBR-001",
             required_tools=("search_company", "get_company_details"),
             forbidden_tools=("save_assessment",),
+        ),
+    ),
+    # Every tool fails at least once and the run uses exactly the 8-attempt budget.
+    # The single 429 among the 503s/timeouts is the "needle" to find in each UI.
+    Case(
+        id="noisy",
+        scenario="Noisy run: 5 failed attempts, one 429 needle, tool budget fully used",
+        company="Hooli Holdings",
+        authorized=True,
+        faults={"search_company": ("error",), "get_company_details": ("timeout", "error"),
+                "save_assessment": ("error", "ratelimit")},
+        expected=Expected(
+            decision="qualified",
+            company_id="HOOL-001",
+            required_tools=("search_company", "get_company_details", "save_assessment"),
+            expect_save=True,
+            min_retries=5,
         ),
     ),
 )

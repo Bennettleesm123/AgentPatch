@@ -9,10 +9,11 @@ from pathlib import Path
 
 from .agent import ARTIFACTS, Limits, run_case
 from .configs import load_config
-from .data import CASES, SCENARIO_5, get_cases
+from .data import CASES, CASES_BY_ID, SCENARIO_5, get_cases
 from .evals import EVALUATORS, compare_markdown, compare_reports, evaluate_records
 from .models import build_model
 from .settings import load_dotenv, redact, require_env
+from .tracing import load_trace
 
 RESULTS = ARTIFACTS / "results"
 REPORTS = ARTIFACTS / "reports"
@@ -108,7 +109,6 @@ def cmd_compare(args) -> int:
 def cmd_trace(args) -> int:
     from .providers import PROVIDERS, get_adapter
     from .providers.base import MAX_TRACE_UPLOADS, Ledger
-    from .tracing import load_trace
 
     providers = PROVIDERS if args.provider == "all" else (args.provider,)
     if args.approve_upload and len(providers) > 1:
@@ -147,23 +147,31 @@ def _native_eval(args) -> int:
     adapter = get_adapter(args.native)
     if not getattr(adapter, "NATIVE_EVAL", True):
         try:
-            adapter.native_eval({}, [])
+            adapter.native_eval(None, [], [])
         except NativeEvalUnsupported as exc:
             print(f"[native:{args.native}] not available: {exc}")
         return 0
-    case_ids = [c.id for c in get_cases(args.case)]
+    # The provider dataset always holds every case, so experiments always cover all of them.
+    case_ids = [c.id for c in CASES]
     configs = args.config.split(",")
     rows = len(case_ids) * len(configs)
     if not args.approve_upload:
-        print(f"[dry-run] native eval on {args.native}: would create dataset of {len(case_ids)} items and "
-              f"{len(configs)} experiments ({rows} rows) using replayed offline outputs and deterministic scorers "
-              f"{list(EVALUATORS)}. No LLM judges. Add --approve-upload to run. Nothing was sent.")
+        print(f"[dry-run] native eval on {args.native}: would sync a dataset of {len(case_ids)} items and run "
+              f"{len(configs)} experiments ({rows} rows). Each row re-runs the offline scripted agent (no LLM "
+              f"calls), nests its full trace, and scores it with {list(EVALUATORS)}. No LLM judges. "
+              "Add --approve-upload to run. Nothing was sent.")
         return 0
-    records = {c: {r["case_id"]: r for r in run_configs(c, "offline", args.case)} for c in configs}
     require_env(*adapter.ENV)
+
+    def run_fn(config_name: str, case_id: str):
+        config = load_config(config_name)
+        rec = run_case(CASES_BY_ID[case_id], config, build_model("offline", config), "offline", Limits(),
+                       out_dir=ARTIFACTS / "traces" / "native")
+        return rec, load_trace(rec["trace_path"])
+
     try:
         Ledger().reserve(args.native, "eval_rows", rows, MAX_EVAL_ROWS)
-        result = adapter.native_eval(records, case_ids)
+        result = adapter.native_eval(run_fn, configs, case_ids)
     except NativeEvalUnsupported as exc:
         print(f"[native:{args.native}] not available: {exc}")
         return 0
