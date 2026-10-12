@@ -68,6 +68,21 @@ hands-on observations: fill them in during manual review, because no hosted uplo
 - **Preference:** the LangSmith UI felt nicer overall. Both did essentially the same job, and both offer an AI
   assistant for analysing traces.
 
+### Opik (2026-10-12, Opik's demo project; agenteval-lab data still to be uploaded)
+
+- **UI:** liked overall. The Logs view has an error-rate tile and a "With errors" filter, and errored
+  traces surface first.
+- **Ollie (built-in assistant):** no API key needed, though it has a usage limit. Asked to "summarise
+  the errors", it found the 2 errored traces and named the failing step and root cause (a 400 from a
+  malformed `messages` argument). It proposed a fix, spotted a separate quality bug, and offered to add
+  the queries to a test suite. This is the closest any platform came to an automatic "what's wrong" summary.
+- **Diagnostics:** a separate page that analyses traces for issues automatically; it was still on its
+  first run.
+- **Rough edges:** the chart's x-axis timestamps overlap, and Ollie reports times in UTC while the
+  table shows local time.
+- **To do:** needle test and native eval on agenteval-lab data, and ask Ollie to explain the
+  baseline → candidate regression.
+
 Sources:
 - LangSmith: [annotate-code](https://docs.langchain.com/langsmith/annotate-code), [log-llm-trace](https://docs.langchain.com/langsmith/log-llm-trace), [evaluate](https://docs.langchain.com/langsmith/evaluate-llm-application), [OTel](https://docs.langchain.com/langsmith/trace-with-opentelemetry), [pricing](https://www.langchain.com/pricing)
 - Opik: [docs](https://www.comet.com/docs/opik), [SDK source](https://github.com/comet-ml/opik/tree/main/sdks/python), [pricing](https://www.comet.com/site/pricing/)
