@@ -77,6 +77,8 @@ def test_cli_native_eval_dry_run(tmp_path, monkeypatch, capsys):
     monkeypatch.chdir(tmp_path)
     assert cli.main(["eval", "--native", "braintrust"]) == 0
     assert "Nothing was sent" in capsys.readouterr().out
+    assert cli.main(["eval", "--native", "raindrop", "--approve-upload"]) == 0
+    assert "not available" in capsys.readouterr().out
 
 
 def test_cli_gemini_requires_approval(tmp_path, monkeypatch, capsys):
