@@ -171,6 +171,9 @@ def test_cli_run_and_inspect_a_plain_python_agent(tmp_path, monkeypatch, capsys)
     assert "2/2 trials passed" in capsys.readouterr().out
     [r] = store.list_runs(home)
     assert r.info["agent_kind"] == "python" and all(x["outcome"] == "pass" for x in r.results())
+    import_traces(r.traces(), "other-suite", None, home)  # a run of a different suite is never suggested
+    assert main(["--home", home, "run", "--label", "candidate"]) == 0
+    assert f"compare with: agentpatch compare {r.id} " in capsys.readouterr().out
 
 
 def test_cli_import_warns_on_mismatched_output_paths(tmp_path, capsys):

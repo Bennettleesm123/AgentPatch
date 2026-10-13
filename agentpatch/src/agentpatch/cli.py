@@ -158,9 +158,10 @@ def cmd_run(a, st):
     passed = sum(r["outcome"] == "pass" for r in res)
     print(f"\n\n{passed}/{len(res)} trials passed. Saved run {run.id}")
     others = [r for r in store.list_runs(a.home) if r.id != run.id]
-    if others:
-        base = next((r for r in others if r.label == "baseline"), others[0])
-        print(st.dim(f"compare with: agentpatch compare {base.label if base.label != a.label else base.id} {run.id}"))
+    same_suite = [r for r in others if r.info.get("suite") == run.info.get("suite")]
+    if same_suite:
+        base = next((r for r in same_suite if r.label == "baseline"), same_suite[0])
+        print(st.dim(f"compare with: agentpatch compare {base.id} {run.id}"))
     return 0
 
 
@@ -271,7 +272,7 @@ def cmd_runs(a, st):
 def cmd_ui(a, st):
     from .server import serve
 
-    serve(a.home, port=a.port, open_browser=not a.no_open)
+    serve(a.home, port=a.port, open_browser=not a.no_open, host=a.host)
     return 0
 
 
@@ -365,6 +366,8 @@ def main(argv=None) -> int:
     sp = sub.add_parser("ui", help="open the dashboard")
     sp.add_argument("--port", type=int, default=8765)
     sp.add_argument("--no-open", action="store_true", help="don't open a browser")
+    sp.add_argument("--host", default="127.0.0.1",
+                    help="address to listen on (default 127.0.0.1; use 0.0.0.0 inside a VM or container you forward ports from)")
     sp.set_defaults(fn=cmd_ui)
 
     sp = sub.add_parser("demo", help="run the offline LangGraph demo (baseline vs candidate) and open the dashboard")

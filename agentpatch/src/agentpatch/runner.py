@@ -14,7 +14,7 @@ from . import recorder as rec_mod
 from .checks import evaluate_trace
 from .coverage import unrecorded_counts
 from .recorder import Recorder
-from .schema import Trace
+from .schema import Trace, jsonable
 from .store import Run, finish_run, new_run, save_trace
 from .suite import Suite, SuiteError
 
@@ -150,6 +150,10 @@ def git_info(cwd: Path) -> dict | None:
         return None
 
 
+def _case_info(cases) -> dict:
+    return {c.id: {"description": c.description, "input": jsonable(c.input) if c.has_input else None} for c in cases}
+
+
 def run_suite(suite: Suite, label: str, target: str | None = None, repeats: int | None = None,
               root: str | Path | None = None, cases: list[str] | None = None,
               progress: Callable[[str, int, dict], None] | None = None) -> Run:
@@ -167,7 +171,8 @@ def run_suite(suite: Suite, label: str, target: str | None = None, repeats: int 
     n = repeats or suite.repeats
     run = new_run(label, {"suite": suite.name, "suite_path": str(suite.path) if suite.path else None,
                           "target": spec, "agent_kind": agent.kind, "repeats": n,
-                          "cases": [c.id for c in selected], "graph": agent.structure(),
+                          "cases": [c.id for c in selected], "case_info": _case_info(selected),
+                          "graph": agent.structure(),
                           "git": git_info(suite.base_dir), "source": agent.kind,
                           "thresholds": suite.thresholds, "coverage_expectations": suite.coverage,
                           "checked_tools": sorted(suite.referenced_tools())}, root)
@@ -192,7 +197,9 @@ def import_traces(traces: list[Trace], label: str, suite: Suite | None = None, r
         t.trial = seen.get(t.case_id, 0)
         seen[t.case_id] = t.trial + 1
     run = new_run(label, {"suite": suite.name if suite else None, "target": None, "agent_kind": source,
-                          "repeats": max(seen.values(), default=0), "cases": sorted(seen), "graph": None,
+                          "repeats": max(seen.values(), default=0), "cases": sorted(seen),
+                          "case_info": _case_info([c for c in suite.cases if c.id in seen]) if suite else {},
+                          "graph": None,
                           "source": source, "thresholds": suite.thresholds if suite else None,
                           "coverage_expectations": suite.coverage if suite else {},
                           "checked_tools": sorted(suite.referenced_tools()) if suite else []}, root)

@@ -14,7 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from . import store
+from . import explore, store
 from .compare import compare
 from .coverage import run_coverage, trace_gaps
 from .diagnose import align, diagnose
@@ -159,8 +159,34 @@ class Api:
         return run_coverage(r.traces(), r.info.get("graph"), set(r.info.get("checked_tools") or []),
                             r.info.get("coverage_expectations"), r.info.get("thresholds"))
 
+    def experiment(self, q: dict) -> dict:
+        cmp = self.compare(q)
+        b = self._resolve(cmp["baseline"]["run_id"], "baseline")
+        c = self._resolve(cmp["candidate"]["run_id"], "candidate")
+        key = ("experiment",) + self._stamp(b) + self._stamp(c)
+        with self._lock:
+            if key not in self._cache:
+                self._cache[key] = explore.experiment(b, c, cmp)
+            return self._cache[key]
+
+    def traces(self, q: dict) -> dict:
+        r = self._resolve(q.get("run"), "run")
+        return {"run": _run_summary(r), "traces": explore.traces_table(r)}
+
+    def datasets(self, q: dict) -> dict:
+        return {"datasets": explore.datasets(store.list_runs(self.home))}
+
+    def dataset(self, q: dict) -> dict:
+        if not q.get("name"):
+            raise ApiError(400, "missing `name` parameter")
+        d = explore.dataset(store.list_runs(self.home), q["name"])
+        if d is None:
+            raise ApiError(404, f"no runs use suite {q['name']!r}")
+        return d
+
     ROUTES = {"/api/runs": "runs", "/api/compare": "compare", "/api/run": "run", "/api/trace": "trace",
-              "/api/case": "case", "/api/coverage": "coverage"}
+              "/api/case": "case", "/api/coverage": "coverage", "/api/experiment": "experiment",
+              "/api/traces": "traces", "/api/datasets": "datasets", "/api/dataset": "dataset"}
 
     def handle(self, raw_path: str) -> tuple[int, str, bytes]:
         """(status, content type, body) for a GET request path."""
@@ -213,14 +239,17 @@ def make_server(home: str | Path | None = None, port: int = 8765, host: str = "1
     return ThreadingHTTPServer((host, port), Handler)
 
 
-def serve(home: str | Path | None = None, port: int = 8765, open_browser: bool = True) -> None:
+def serve(home: str | Path | None = None, port: int = 8765, open_browser: bool = True, host: str = "127.0.0.1") -> None:
     try:
-        httpd = make_server(home, port)
+        httpd = make_server(home, port, host)
     except OSError as exc:
-        raise LookupError(f"can't listen on 127.0.0.1:{port} ({exc.strerror}); try --port {port + 1}") from None
+        raise LookupError(f"can't listen on {host}:{port} ({exc.strerror}); try --port {port + 1}") from None
     url = f"http://127.0.0.1:{httpd.server_address[1]}/"
     n = len(store.list_runs(home))
     print(f"AgentPatch dashboard: {url}  ({n} run(s) in {store.home(home).resolve()}; Ctrl+C to stop)", flush=True)
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        print(f"warning: listening on {host}, so anyone who can reach this machine on port {port} can read your "
+              "traces (there is no login)", flush=True)
     if open_browser:
         threading.Timer(0.3, lambda: webbrowser.open(url)).start()
     try:

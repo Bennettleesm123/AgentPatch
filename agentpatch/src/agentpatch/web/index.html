@@ -8,15 +8,21 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header class="top">
-    <a class="brand" href="#/">
-      <span class="logo">◆</span> AgentPatch
-      <span class="tagline">what broke, why, and is it still observable</span>
-    </a>
-    <nav id="nav"></nav>
-    <div id="pair"></div>
-  </header>
-  <main id="app"><p class="muted pad">Loading…</p></main>
+  <div class="shell">
+    <aside class="side">
+      <a class="brand" href="#/"><img src="/favicon.svg" alt="" width="20" height="20"> AgentPatch</a>
+      <nav id="nav"></nav>
+      <div class="side-foot" id="side-foot"></div>
+    </aside>
+    <div class="mainwrap">
+      <header class="topbar">
+        <div id="crumbs" class="crumbs"></div>
+        <div id="pair"></div>
+      </header>
+      <main id="app"><p class="muted pad">Loading…</p></main>
+    </div>
+  </div>
+  <div id="drawer-root"></div>
   <script src="/app.js"></script>
 </body>
 </html>
