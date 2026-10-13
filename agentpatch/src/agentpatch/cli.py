@@ -21,6 +21,7 @@ name = "{name}"
 # function `fn(input) -> output`. Paths like `agent.py:graph` work too.
 target = "{target}"
 repeats = 3            # runs per case; flaky behaviour needs more than one
+# config = {{ recursion_limit = 25, configurable = {{ user_id = "test" }} }}   # passed to graph.invoke
 
 [defaults]             # checks applied to every case
 checks = [
@@ -111,7 +112,7 @@ def cmd_inspect(a, st):
     else:
         print("give --input '<json>' or a suite with cases")
         return 2
-    agent = Agent(load_target(spec, suite.base_dir if suite else None))
+    agent = Agent(load_target(spec, suite.base_dir if suite else None), suite.agent_config if suite else None)
     trace = run_once(agent, payload, case_id)
     print(st.bold(f"Captured {len(trace.steps)} steps for `{case_id}` ({agent.kind}, {trace.duration_ms:.0f} ms, "
                   f"{'ok' if trace.status == 'ok' else 'FAILED: ' + str(trace.error)})"))

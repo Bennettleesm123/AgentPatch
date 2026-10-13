@@ -129,6 +129,53 @@ def test_runner_wraps_a_compiled_graph_and_captures_structure():
     assert t.status == "ok" and t.source == "langgraph" and t.tool_steps("weather")
 
 
+def test_agent_config_reaches_the_graph(tmp_path):
+    from typing import TypedDict
+
+    from langchain_core.runnables import RunnableConfig
+    from langgraph.graph import END, START, StateGraph
+
+    from agentpatch.runner import run_suite
+    from agentpatch.suite import parse_suite
+
+    class St(TypedDict):
+        out: str
+
+    def node(state: St, config: RunnableConfig):
+        return {"out": config["configurable"]["tone"]}
+
+    g = StateGraph(St)
+    g.add_node("n", node)
+    g.add_edge(START, "n")
+    g.add_edge("n", END)
+    import sys
+    import types
+
+    mod = types.ModuleType("cfg_agent_mod")
+    mod.graph = g.compile()
+    sys.modules["cfg_agent_mod"] = mod
+    suite = parse_suite({"agent": {"target": "cfg_agent_mod:graph", "config": {"configurable": {"tone": "warm"},
+                                                                                "recursion_limit": 5}},
+                         "cases": [{"id": "a", "input": {"out": ""},
+                                    "checks": [{"type": "output", "path": "out", "equals": "warm"}]}]})
+    run = run_suite(suite, "x", root=tmp_path)
+    assert run.results()[0]["outcome"] == "pass"
+
+
+def test_target_errors_are_explained(tmp_path, monkeypatch):
+    from agentpatch.runner import Agent, TargetError, load_target
+
+    (tmp_path / "needs_key.py").write_text("import os\nKEY = os.environ['MY_MODEL_KEY_FOR_TEST']\n")
+    with pytest.raises(TargetError, match="missing environment variable"):
+        load_target("needs_key.py:graph", tmp_path)
+
+    def factory():
+        raise RuntimeError("no model configured")
+
+    with pytest.raises(TargetError, match=r"factory factory\(\) raised RuntimeError"):
+        Agent(factory)
+
+
 def test_graph_exception_becomes_a_failed_trace():
     from langgraph.graph import END, START, StateGraph
     from typing import TypedDict

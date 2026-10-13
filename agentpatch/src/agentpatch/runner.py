@@ -47,6 +47,11 @@ def load_target(spec: str, base_dir: Path | None = None) -> Any:
     except ModuleNotFoundError as exc:
         raise TargetError(f"couldn't import {mod_name!r} for target {spec!r}: {exc}. Run from the directory that "
                           "contains it, or use a file path like `agent.py:graph`.") from None
+    except TargetError:
+        raise
+    except Exception as exc:
+        hint = " (a missing environment variable? set it before running AgentPatch)" if isinstance(exc, KeyError) else ""
+        raise TargetError(f"importing {mod_name!r} raised {type(exc).__name__}: {exc}{hint}") from None
     try:
         obj = module
         for part in attr.split("."):
@@ -59,15 +64,20 @@ def load_target(spec: str, base_dir: Path | None = None) -> Any:
 class Agent:
     """Uniform wrapper: invoke(input, recorder, case_id, trial, run_id) -> output."""
 
-    def __init__(self, obj: Any):
+    def __init__(self, obj: Any, config: dict | None = None):
         from .integrations import langgraph_available
 
         self.graph = None
         self.fn: Callable | None = None
+        self.config = dict(config or {})
         if langgraph_available() and _is_graph(obj):
             self.graph = obj
         elif callable(obj) and _zero_arg(obj):
-            built = obj()
+            try:
+                built = obj()
+            except Exception as exc:
+                name = getattr(obj, "__name__", "factory")
+                raise TargetError(f"calling the target factory {name}() raised {type(exc).__name__}: {exc}") from None
             if langgraph_available() and _is_graph(built):
                 self.graph = built
             elif callable(built):
@@ -92,8 +102,11 @@ class Agent:
         if self.graph is not None:
             from .integrations.langgraph import run_graph
 
-            cfg = {"configurable": {"thread_id": f"agentpatch:{run_id}:{case_id}:{trial}"},
-                   "metadata": {"agentpatch_case": case_id, "agentpatch_trial": trial}, "run_name": case_id}
+            extra = dict(self.config)
+            cfg = {**extra, "configurable": {**(extra.get("configurable") or {}),
+                                             "thread_id": f"agentpatch:{run_id}:{case_id}:{trial}"},
+                   "metadata": {**(extra.get("metadata") or {}), "agentpatch_case": case_id,
+                                "agentpatch_trial": trial}, "run_name": case_id}
             return run_graph(self.graph, input, recorder, cfg)
         token = rec_mod._current.set(recorder)
         ptoken = rec_mod._parent.set(recorder.root_key)
@@ -143,7 +156,7 @@ def run_suite(suite: Suite, label: str, target: str | None = None, repeats: int 
     spec = target or suite.target
     if not spec:
         raise TargetError("no agent target: set [agent] target in the suite or pass --target module:attr")
-    agent = Agent(load_target(spec, suite.base_dir))
+    agent = Agent(load_target(spec, suite.base_dir), suite.agent_config)
     selected = [c for c in suite.cases if not cases or c.id in cases]
     if cases and len(selected) != len(set(cases)):
         missing = sorted(set(cases) - {c.id for c in selected})

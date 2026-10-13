@@ -58,6 +58,7 @@ class Suite:
     thresholds: dict = field(default_factory=lambda: dict(DEFAULT_THRESHOLDS))
     coverage: dict = field(default_factory=dict)
     config: dict = field(default_factory=dict)
+    agent_config: dict = field(default_factory=dict)
 
     @property
     def base_dir(self) -> Path:
@@ -93,6 +94,11 @@ def parse_suite(data: dict, path: Path | None = None) -> Suite:
     unknown = set(data) - {"name", "agent", "defaults", "cases", "thresholds", "coverage"}
     if unknown:
         raise SuiteError(f"{where}: unknown top-level section(s) {sorted(unknown)}")
+    bad_agent = set(agent) - {"target", "repeats", "config"}
+    if bad_agent:
+        raise SuiteError(f"{where}: unknown [agent] key(s) {sorted(bad_agent)}; known: config, repeats, target")
+    if not isinstance(agent.get("config", {}), dict):
+        raise SuiteError(f"{where}: [agent] config must be a table, e.g. config = {{ recursion_limit = 50 }}")
     repeats = agent.get("repeats", 1)
     if not isinstance(repeats, int) or not 1 <= repeats <= 50:
         raise SuiteError(f"{where}: agent.repeats must be an integer from 1 to 50")
@@ -131,7 +137,7 @@ def parse_suite(data: dict, path: Path | None = None) -> Suite:
         raise SuiteError(f"{where}: unknown coverage keys {sorted(bad)}")
     return Suite(name=data.get("name") or (path.parent.name if path else "suite"), path=path,
                  target=agent.get("target"), repeats=repeats, cases=cases, thresholds=thresholds,
-                 coverage=coverage, config=data)
+                 coverage=coverage, config=data, agent_config=dict(agent.get("config") or {}))
 
 
 __all__ = ["Suite", "Case", "SuiteError", "load_suite", "parse_suite", "CHECK_TYPES"]

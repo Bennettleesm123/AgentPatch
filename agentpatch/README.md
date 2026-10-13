@@ -129,6 +129,7 @@ name = "support-bot"
 [agent]
 target = "bot.py:graph"
 repeats = 3                     # trials per case (1-50); flaky behaviour needs more than one
+config = { recursion_limit = 25, configurable = { model = "small" } }   # optional, passed to graph.invoke
 
 [defaults]                      # prepended to every case's checks
 checks = [{ type = "completes" }, { type = "max_latency_ms", value = 30000 }]
