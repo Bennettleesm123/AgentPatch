@@ -176,10 +176,12 @@ def summarize(gaps: list[dict], n_traces: int) -> dict:
         e["count"] += 1
         if g["case_id"] is not None:
             e["traces"].add((g["case_id"], g["trial"]))
-        if len(e["examples"]) < 3:
+        seen_cases = {x["case_id"] for x in e["examples"]}
+        if len(e["examples"]) < 5 and g["case_id"] not in seen_cases:
             e["examples"].append({k: g[k] for k in ("case_id", "trial", "step", "message")})
     items = []
     for e in by_code.values():
+        e["cases"] = sorted({c for c, _ in e["traces"] if c is not None})
         e["traces"] = len(e["traces"])
         items.append(e)
     rank = {lvl: i for i, lvl in enumerate(LEVELS)}

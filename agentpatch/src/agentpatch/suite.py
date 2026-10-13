@@ -45,6 +45,7 @@ class Case:
     input: Any
     checks: list[dict]
     description: str = ""
+    has_input: bool = True
 
 
 @dataclass
@@ -107,8 +108,6 @@ def parse_suite(data: dict, path: Path | None = None) -> Suite:
         if cid in seen:
             raise SuiteError(f"{where}: duplicate case id {cid!r}")
         seen.add(cid)
-        if "input" not in c:
-            raise SuiteError(f"{where}: case {cid!r} needs an `input`")
         checks = []
         for ch in list(defaults) + list(c.get("checks") or []):
             try:
@@ -119,7 +118,8 @@ def parse_suite(data: dict, path: Path | None = None) -> Suite:
         dupes = {x for x in ids if ids.count(x) > 1}
         if dupes:
             raise SuiteError(f"{where}: case {cid!r} has duplicate checks {sorted(dupes)}; give them distinct `id`s")
-        cases.append(Case(id=cid, input=c["input"], checks=checks, description=c.get("description", "")))
+        cases.append(Case(id=cid, input=c.get("input"), checks=checks, description=c.get("description", ""),
+                          has_input="input" in c))
     thresholds = dict(DEFAULT_THRESHOLDS)
     for k, v in (data.get("thresholds") or {}).items():
         if k not in DEFAULT_THRESHOLDS or not isinstance(v, (int, float)):

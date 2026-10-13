@@ -16,7 +16,7 @@ from .coverage import unrecorded_counts
 from .recorder import Recorder
 from .schema import Trace
 from .store import Run, finish_run, new_run, save_trace
-from .suite import Suite
+from .suite import Suite, SuiteError
 
 
 class TargetError(ValueError):
@@ -147,7 +147,10 @@ def run_suite(suite: Suite, label: str, target: str | None = None, repeats: int 
     selected = [c for c in suite.cases if not cases or c.id in cases]
     if cases and len(selected) != len(set(cases)):
         missing = sorted(set(cases) - {c.id for c in selected})
-        raise ValueError(f"unknown case(s) {missing}; suite has {[c.id for c in suite.cases]}")
+        raise SuiteError(f"unknown case(s) {missing}; suite has {[c.id for c in suite.cases]}")
+    no_input = [c.id for c in selected if not c.has_input]
+    if no_input:
+        raise SuiteError(f"case(s) {no_input} have no `input`, so they can only be imported, not run")
     n = repeats or suite.repeats
     run = new_run(label, {"suite": suite.name, "suite_path": str(suite.path) if suite.path else None,
                           "target": spec, "agent_kind": agent.kind, "repeats": n,
