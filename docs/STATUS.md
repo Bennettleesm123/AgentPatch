@@ -8,6 +8,7 @@
 | Suites (TOML), deterministic checks with step evidence and "can't verify" | done, tested |
 | Baseline vs candidate comparison, failure diagnosis, coverage gaps and drift | done, tested on the demo, the multi-agent example and AgentEvalLab traces |
 | CLI with CI exit codes and Markdown/JSON reports; local dashboard | done; the dashboard was exercised in a browser |
+| Dashboard inspection views (Experiments comparison, Traces list, Datasets, step-level trace explorer) | done; API tested, UI driven headlessly through every view and drawer |
 | Async (`ainvoke`) and streaming graphs; semantic output checks; retention | not done (see `agentpatch/README.md`, Limitations) |
 
 Tests: `cd agentpatch && uv run pytest`, fully offline.

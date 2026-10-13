@@ -214,15 +214,38 @@ message saying what to fix). `compare` without arguments uses the latest `baseli
 
 ## Dashboard
 
-`agentpatch ui` serves on `127.0.0.1` only. It has four views:
+`agentpatch ui` serves on `127.0.0.1` by default. Inside a VM, dev container or remote machine whose
+port you forward, use `agentpatch ui --host 0.0.0.0`. There is no login, so anyone who can reach that
+port can read your traces.
+
+The pair picker at the top sets run **A** (baseline) and run **B** (candidate).
 
 - **Overview:** the verdict, the three questions, ranked findings with evidence links, and per-case
   changes.
-- **Case:** the checks per run; why the selected candidate trial failed (failure point, cited facts,
-  next steps); a step-by-step baseline/candidate diff with the failure point highlighted and unchanged
-  stretches collapsed; and the full step trees with inputs and outputs.
-- **Observability:** the gaps table (baseline vs candidate counts), drift, and capture rates.
-- **Runs:** pick which runs to compare. Picking the run already on the other side swaps them.
+- **Case:** the checks per run, and why the selected candidate trial failed (failure point, cited
+  facts, next steps). Below that is a step-by-step diff of A and B, with the failure point highlighted
+  and unchanged stretches collapsed, then both full traces in the trace explorer.
+- **Observability → Coverage & drift:** the gaps table (A vs B counts), drift, and capture rates.
+  "open trace" jumps to the step a gap points at.
+- **Observability → Experiments:** a LangSmith-style comparison.
+  - Charts show check scores by check type, p50/p99 latency, and input/output tokens.
+  - Each case has one row, with input, reference expectations, both outputs, and per-check-type
+    scores for A and B. B is red where it scores lower and green where it scores higher.
+  - Click a row to open the two traces side by side. ↑/↓ moves between rows.
+- **Observability → Traces:** every trace in a run, with status, duration, model and tool calls,
+  token counts and signals (failed checks, verified or possible gaps). You can search and filter it.
+  Click a trace to open it in the trace explorer.
+- **Observability → Datasets:** each suite is a dataset.
+  - **Examples** lists each case with its input, its checks and its results across runs.
+  - **Experiments** lists the runs of that suite; select two to compare them.
+- **Runs:** every stored run, with links to its traces, and buttons to use it as A or B. Picking the
+  run that's already on the other side swaps them.
+
+The trace explorer shows the step tree, with durations, a timeline, and markers for errors, failed
+checks and gaps. For the selected step it has four tabs:
+- **Feedback:** the checks and instrumentation gaps that cite the step.
+- **Input** and **Output:** model calls are shown as chat messages, and JSON strings are expanded.
+- **Attributes.**
 
 Trace content is always rendered as text, and the page's Content-Security-Policy allows only its own
 scripts.
@@ -268,6 +291,7 @@ src/agentpatch/
   compare.py     baseline vs candidate findings and verdict       report.py    terminal + Markdown output
   runner.py      targets, suite runs, imports                     store.py     .agentpatch run store
   server.py      local JSON API + static files                    web/         dashboard (vanilla JS, no build)
+  explore.py     experiment, trace-list and dataset views
   cli.py         agentpatch command                               demo/        offline LangGraph demo agent + suite
 examples/        multi-agent LangGraph example; suite for AgentEvalLab traces
 tests/           uv run pytest (offline; sockets blocked)
