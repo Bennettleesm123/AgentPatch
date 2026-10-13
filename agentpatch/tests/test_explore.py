@@ -85,6 +85,13 @@ def test_output_preview():
     assert s["outcome"] == "unchecked" and s["tool_errors"] == 1 and s["tokens_in"] == 10 and s["tokens_out"] == 5
 
 
+def test_demo_defines_host_so_opening_the_dashboard_does_not_crash(monkeypatch):
+    seen = {}
+    monkeypatch.setattr("agentpatch.cli.cmd_demo", lambda a, st: seen.update(host=a.host) or 0)
+    assert main(["demo"]) == 0
+    assert seen["host"] == "127.0.0.1"
+
+
 def test_ui_host_flag(tmp_path, monkeypatch):
     import agentpatch.server as server
 

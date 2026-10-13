@@ -272,7 +272,7 @@ def cmd_runs(a, st):
 def cmd_ui(a, st):
     from .server import serve
 
-    serve(a.home, port=a.port, open_browser=not a.no_open, host=a.host)
+    serve(a.home, port=a.port, open_browser=not a.no_open, host=getattr(a, "host", "127.0.0.1"))
     return 0
 
 
@@ -372,6 +372,7 @@ def main(argv=None) -> int:
 
     sp = sub.add_parser("demo", help="run the offline LangGraph demo (baseline vs candidate) and open the dashboard")
     sp.add_argument("--port", type=int, default=8765)
+    sp.add_argument("--host", default="127.0.0.1", help="address the dashboard listens on (default 127.0.0.1)")
     sp.add_argument("--no-open", action="store_true")
     sp.add_argument("--no-ui", action="store_true", help="print the comparison only")
     sp.set_defaults(fn=cmd_demo)
