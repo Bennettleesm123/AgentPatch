@@ -98,7 +98,8 @@ function renderPair() {
   const p = pairFromUrl();
   const sel = (which) => h("select", {
     title: which, onchange: (e) => {
-      const r = parseHash(); r.q[which === "baseline" ? "b" : "c"] = e.target.value;
+      const r = parseHash();
+      Object.assign(r.q, choosePair(p, which === "baseline" ? "b" : "c", e.target.value));
       location.hash = link(r.view, r.arg, r.q);
     },
   }, runs.map((r) => {
@@ -109,6 +110,15 @@ function renderPair() {
   el.replaceChildren("baseline", sel("baseline"), h("button", {
     title: "swap", onclick: () => { const r = parseHash(); r.q.b = p.candidate; r.q.c = p.baseline; location.hash = link(r.view, r.arg, r.q); },
   }, "⇄"), "candidate", sel("candidate"));
+}
+
+// Picking the run that's currently on the other side swaps the two instead of comparing a run with itself.
+function choosePair(p, side, id) {
+  const other = side === "b" ? p.candidate : p.baseline;
+  const mine = side === "b" ? p.baseline : p.candidate;
+  const q = { [side]: id, [side === "b" ? "c" : "b"]: other };
+  if (id === other) q[side === "b" ? "c" : "b"] = mine;
+  return q;
 }
 
 async function render() {
@@ -512,7 +522,7 @@ function limitsPanel() {
 function renderRuns() {
   const runs = state.runs.runs;
   const p = runs.length >= 2 ? pairFromUrl() : {};
-  const setPair = (which, id) => { const r = parseHash(); r.q[which] = id; location.hash = link("overview", null, r.q); };
+  const setPair = (which, id) => { const r = parseHash(); Object.assign(r.q, choosePair(p, which, id)); location.hash = link("overview", null, r.q); };
   $app.replaceChildren(h("div", { class: "panel" }, h("h2", null, "Runs"), h("p", { class: "muted small" }, `Stored in ${state.runs.home}`),
     runs.length ? h("table", null, h("tr", null, h("th", null, "label"), h("th", null, "run id"), h("th", { class: "num" }, "passed"), h("th", null, "target / source"), h("th", null, "commit"), h("th", null, "")),
       runs.map((r) => h("tr", null, h("td", null, h("b", null, r.label)), h("td", { class: "mono small" }, r.run_id),
