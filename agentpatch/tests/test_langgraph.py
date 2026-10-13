@@ -84,6 +84,24 @@ def test_tool_executed_outside_langchain_is_a_verified_gap():
     assert "`weather`" in gaps[0]["message"]
 
 
+def test_subgraph_agents_are_namespaced_and_not_duplicated():
+    from pathlib import Path
+
+    from agentpatch.runner import Agent, load_target, run_once
+
+    agent = Agent(load_target("multi_agent/agents.py:build", Path(__file__).parent.parent / "examples"))
+    struct = agent.structure()
+    assert {"researcher", "researcher/think", "researcher/tools", "writer", "writer/think"} <= set(struct["nodes"])
+    assert struct["subgraphs"] == ["researcher", "writer"]
+    t = run_once(agent, {"messages": [("user", "Acme")]}, "c")
+    nodes = [s.name for s in t.of_kind("node")]
+    assert nodes.count("researcher") == 1 and nodes.count("writer") == 1
+    assert "researcher/tools" in nodes and "writer/think" in nodes
+    lookup = t.tool_steps("lookup")[0]
+    assert t.by_id[lookup.parent_id].name == "researcher/tools"
+    assert t.by_id[t.by_id[lookup.parent_id].parent_id].name == "researcher"
+
+
 def test_runner_wraps_a_compiled_graph_and_captures_structure():
     from agentpatch.runner import Agent, run_once
 

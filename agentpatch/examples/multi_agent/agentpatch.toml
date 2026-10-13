@@ -1,0 +1,25 @@
+# Two-agent LangGraph example (researcher -> writer subgraphs). See agents.py.
+name = "multi-agent-example"
+
+[agent]
+target = "agents.py:build"
+repeats = 3
+
+[defaults]
+checks = [
+  { type = "completes" },
+  { type = "max_llm_calls", value = 6 },
+]
+
+[[cases]]
+id = "acme"
+input = { messages = [["user", "Acme Robotics"]] }
+checks = [
+  { type = "tool_called", tool = "lookup" },
+  { type = "tool_called", tool = "fact_check" },
+  { type = "tool_order", sequence = ["lookup", "fact_check"] },
+  { type = "output", path = "messages.-1.content", contains = "supported" },
+]
+
+[coverage]
+expected_nodes = ["researcher/think", "writer/think"]

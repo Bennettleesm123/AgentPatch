@@ -96,6 +96,13 @@ class Recorder:
     def has(self, key: Any) -> bool:
         return key in self._steps
 
+    def info(self, key: Any) -> dict | None:
+        """name, kind, parent_key and attributes of a recorded step (a copy), or None."""
+        with self._lock:
+            s = self._steps.get(key)
+            return None if s is None else {"name": s["name"], "kind": s["kind"], "parent_key": s["parent_key"],
+                                           "attributes": dict(s["attributes"])}
+
     def _fallback_parent(self):
         """Innermost open node/agent step: used when the caller doesn't know its parent."""
         for k in reversed(self._open):

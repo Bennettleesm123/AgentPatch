@@ -89,6 +89,31 @@ def _decision_step(trace: Trace, failure: Step) -> Step | None:
     return before[-1] if before else None
 
 
+def _missing_tools(trace: Trace, failed: list[dict]) -> set[str]:
+    """Tools that failed checks required but that never ran in this trace."""
+    out = set()
+    for c in failed:
+        kind, _, arg = c["id"].partition(":")
+        if c["type"] == "tool_called" and kind == "tool_called" and not trace.tool_steps(arg):
+            out.add(arg)
+        elif c["type"] == "tool_order" and kind == "tool_order":
+            out |= {t for t in arg.split(">") if not trace.tool_steps(t)}
+    return out
+
+
+def _model_call_that_should_request(cand: Trace, base: Trace | None, tool: str) -> Step | None:
+    """The candidate model call at the position where baseline's model requested `tool` (else the last one)."""
+    c_llms = cand.of_kind("llm")
+    if not c_llms:
+        return None
+    if base is not None:
+        b_llms = base.of_kind("llm")
+        k = next((i for i, s in enumerate(b_llms) if tool in (s.attributes.get("requested_tools") or [])), None)
+        if k is not None:
+            return c_llms[min(k, len(c_llms) - 1)]
+    return c_llms[-1]
+
+
 def _brief(step: Step | None) -> dict | None:
     if step is None:
         return None
@@ -130,13 +155,23 @@ def diagnose(cand: Trace, cand_result: dict, base: Trace | None = None, base_res
 
     # Likely failure point, by fixed precedence.
     point, rule = None, None
+    missing = _missing_tools(cand, failed)
     for c in failed:
+        if c["type"] in ("tool_called", "tool_order") and missing:
+            continue  # its evidence is the calls that did happen; the problem is the one that didn't
         steps = [cand.by_id[i] for i in c["evidence"] if i in cand.by_id and i != root_id]
         if steps:
             point, rule = steps[0], f"cited as evidence by the failed check `{c['id']}`"
             break
     if point is None and cand.status == "error" and origins:
         point, rule = origins[-1], "where the error that ended the run started"
+    if point is None and missing:
+        tool = sorted(missing)[0]
+        point = _model_call_that_should_request(cand, base, tool)
+        if point is not None:
+            rule = (f"the model call at the turn where baseline requested `{tool}`" if base is not None and
+                    any(tool in (s.attributes.get("requested_tools") or []) for s in base.of_kind("llm"))
+                    else f"the last model call, which never requested `{tool}`")
     if point is None and failed:
         llms = cand.of_kind("llm")
         if llms:
@@ -156,7 +191,12 @@ def diagnose(cand: Trace, cand_result: dict, base: Trace | None = None, base_res
             divergence = first_div
     if point is None and divergence and divergence["candidate"]:
         point, rule = cand.by_id[divergence["candidate"][0]], "the first step where the run differs from baseline"
-    decision = _decision_step(cand, point) if point is not None else None
+    if point is None:
+        decision = None
+    elif point.kind == "llm":
+        decision = point
+    else:
+        decision = _decision_step(cand, point)
 
     if base is not None:
         if alignment["identical"]:
@@ -183,7 +223,7 @@ def diagnose(cand: Trace, cand_result: dict, base: Trace | None = None, base_res
                 if bf and (not cf or bv != cv):
                     fact(f"Final output `{path}`: baseline {bv!r}, candidate {repr(cv) if cf else 'missing'}.", root_id)
 
-    if decision is not None and point is not None and decision is not point:
+    if decision is not None:
         req = decision.attributes.get("requested_tools") or []
         fact(f"{decision.id} decided the next step" + (f" (requested {', '.join(f'`{r}`' for r in req)})" if req
                                                        else " (requested no tools)") + ".", decision.id)
@@ -196,7 +236,9 @@ def diagnose(cand: Trace, cand_result: dict, base: Trace | None = None, base_res
                      + (", ".join(f"`{r}`" for r in breq) if breq else "no tools (it answered)") + ".",
                      "baseline:" + b_llms[k].id)
 
-    next_steps = _next_steps(cand, point, decision, failed, base)
+    next_steps = _next_steps(cand, point, decision, failed, base, missing)
+    if missing:
+        fact("Required tool(s) never called in this run: " + ", ".join(f"`{t}`" for t in sorted(missing)) + ".")
     return {
         "case_id": cand.case_id, "trial": cand.trial, "baseline_trial": base.trial if base else None,
         "outcome": cand_result["outcome"], "failed_checks": failed, "unverified_checks": unknown,
@@ -209,7 +251,8 @@ def diagnose(cand: Trace, cand_result: dict, base: Trace | None = None, base_res
     }
 
 
-def _next_steps(cand: Trace, point: Step | None, decision: Step | None, failed: list[dict], base: Trace | None):
+def _next_steps(cand: Trace, point: Step | None, decision: Step | None, failed: list[dict], base: Trace | None,
+                missing: set[str] = frozenset()):
     out = []
     if point is None:
         if failed:
@@ -229,6 +272,12 @@ def _next_steps(cand: Trace, point: Step | None, decision: Step | None, failed: 
         if hint in ("rate limit / HTTP 429", "timeout", "upstream server error / 5xx"):
             out.append(f"Transient-looking error: check whether `{point.name}` has retries/backoff like the other "
                        "calls, and re-run with more repeats to measure how often it happens.")
+    elif missing and point.kind == "llm":
+        tools = ", ".join(f"`{t}`" for t in sorted(missing))
+        out.append(f"Compare {point.id}'s input with the baseline model call at the same turn"
+                   + (" (which requested it)" if base is not None else "") + f": why didn't it request {tools}?")
+        out.append(f"Check that {tools} is still bound to the model and registered in the tool node, and that the "
+                   "prompt still asks for it; a tool that silently disappears looks exactly like this.")
     elif decision is not None:
         out.append(f"Compare {decision.id}'s input and output with the baseline run to see where the reasoning "
                    "changed.")

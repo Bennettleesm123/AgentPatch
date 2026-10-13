@@ -94,7 +94,7 @@ def get_path(data: Any, path: str) -> tuple[bool, Any]:
     for part in path.split("."):
         if isinstance(cur, dict) and part in cur:
             cur = cur[part]
-        elif isinstance(cur, list) and part.isdigit() and int(part) < len(cur):
+        elif isinstance(cur, list) and part.lstrip("-").isdigit() and -len(cur) <= int(part) < len(cur):
             cur = cur[int(part)]
         else:
             return False, None

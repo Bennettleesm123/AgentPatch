@@ -291,8 +291,7 @@ def compare(base_run: Run, cand_run: Run, thresholds: dict | None = None) -> dic
             if base_cpr and abs(y["calls_per_run"] - base_cpr) / base_cpr * 100 >= th["tool_calls_pct"] \
                     and abs(y["calls_per_run"] - base_cpr) >= 0.5:
                 add("info", "tools", f"`{name}` calls per run: {base_cpr} → {y['calls_per_run']}")
-        elif x and x["calls"] and not (y and (y["calls"] or y["unrecorded"])):
-            add("warning", "tools", f"`{name}` is no longer called", f"Baseline called it {x['calls_per_run']}x per run.")
+        # a tool that stopped appearing is reported once, by drift ("removed, or no longer captured?")
     # errors
     be, ce = _errors(b), _errors(c)
     for key, e in ce.items():
@@ -332,15 +331,22 @@ def compare(base_run: Run, cand_run: Run, thresholds: dict | None = None) -> dic
             continue  # reported below as observability findings, with evidence
         add(item["severity"], "drift", item["message"])
     b_codes = {i["code"]: i for i in b_cov["summary"]["items"]}
+    explained_by_drift = {d.get("node") or d.get("tool") for d in drift_items
+                          if d["code"] in ("node_no_longer_observed", "node_removed", "tool_removed")}
     for item in c_cov["summary"]["items"]:
         if item["level"] == "info":
             continue
+        if item["code"] in ("declared_node_not_observed", "check_references_unseen_tool"):
+            names = {m.group(1) for ex in item["examples"] if (m := re.search(r"`([^`]+)`", ex["message"]))}
+            if names and names <= explained_by_drift:
+                continue
         new = item["code"] not in b_codes
         if item["level"] == "verified" or new:
             ex = item["examples"][0] if item["examples"] else {}
+            where = f"{item['count']}x in {item['traces']} trace(s)" if item["traces"] else f"{item['count']}x"
             add("warning" if item["level"] == "verified" else "info", "observability",
                 f"{'Verified' if item['level'] == 'verified' else 'Possible'} gap: {_GAP_TITLES.get(item['code'], item['code'])}"
-                f" ({item['count']}x in {item['traces']} trace(s))", ex.get("message", item["message"]),
+                f" ({where})", ex.get("message", item["message"]),
                 [ex["case_id"]] if ex.get("case_id") else [],
                 [{"case_id": ex.get("case_id"), "trial": ex.get("trial"), "step": ex.get("step")}] if ex.get("step") else [],
                 gap=item["code"], new=new)
@@ -363,7 +369,8 @@ def compare(base_run: Run, cand_run: Run, thresholds: dict | None = None) -> dic
         notes.append("Check definitions differ between runs for: " + ", ".join(changed_checks) + ".")
     return {
         "baseline": _run_meta(base_run), "candidate": _run_meta(cand_run), "verdict": verdict,
-        "headline": _headline(regressions, fixes, counts, findings), "counts": dict(counts),
+        "headline": _headline(regressions, fixes, counts, findings,
+                              [r for r in cases if r["change"] == "still_failing"]), "counts": dict(counts),
         "observability": _observability(b_cov, c_cov, drift_items),
         "overall": {"baseline": bo, "candidate": co}, "cases": cases, "tools": tool_rows, "errors": error_rows,
         "coverage": {"baseline": b_cov, "candidate": c_cov, "drift": drift_items}, "findings": findings,
@@ -418,7 +425,7 @@ def _run_meta(run: Run) -> dict:
     return {k: run.info.get(k) for k in keys}
 
 
-def _headline(regressions, fixes, counts, findings) -> str:
+def _headline(regressions, fixes, counts, findings, still_failing=()) -> str:
     parts = []
     hard = [r for r in regressions if r["change"] == "regressed"]
     soft = [r for r in regressions if r["change"] == "intermittent"]
@@ -435,4 +442,9 @@ def _headline(regressions, fixes, counts, findings) -> str:
         parts.append(f"{obs} observability warning{'s' * (obs != 1)}")
     if other > 0:
         parts.append(f"{other} other change{'s' * (other != 1)} to review")
+    if still_failing:
+        parts.append(f"{len(still_failing)} case{'s' * (len(still_failing) != 1)} failing in both runs "
+                     f"({', '.join(r['case_id'] for r in still_failing)})")
+    if parts and not (hard or soft or fixes or obs or other > 0):
+        return "No new regressions, but " + "; ".join(parts) + "."
     return ("; ".join(parts) + ".") if parts else "No meaningful changes between baseline and candidate."

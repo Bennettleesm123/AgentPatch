@@ -51,14 +51,32 @@ class AgentPatchCallbackHandler(BaseCallbackHandler):
         node = metadata.get("langgraph_node")
         parent = self._parent(parent_run_id)
         if node and name == node:
-            self.rec.start(run_id, name, "node", parent_key=parent, input=inputs,
-                           attributes={"langgraph_step": metadata.get("langgraph_step"),
+            p = self.rec.info(parent)
+            if p and p["kind"] == "node" and p["attributes"].get("langgraph_node") == name:
+                # A compiled subgraph named like the node that runs it: its root chain is the same step.
+                self._alias[run_id] = parent
+                self.rec.update(parent, {"subgraph": True})
+                return
+            agent = self._enclosing_node(parent)
+            self.rec.start(run_id, f"{agent}/{name}" if agent else name, "node", parent_key=parent, input=inputs,
+                           attributes={"langgraph_node": name, "langgraph_step": metadata.get("langgraph_step"),
                                        "triggers": list(metadata.get("langgraph_triggers") or [])})
         elif node and name not in _INTERNAL and not name.startswith(("__", "Runnable")) \
                 and not name.endswith(("Template", "Parser", "Prompt")):
             self.rec.start(run_id, name, "other", parent_key=parent, input=None)
         else:
             self._alias[run_id] = parent if parent != self.rec.root_key else self._root_run
+
+    def _enclosing_node(self, key) -> str | None:
+        """Name of the nearest node step above `key`: nodes inside a subgraph are named `<agent>/<node>`."""
+        for _ in range(50):
+            p = self.rec.info(key)
+            if p is None or p["kind"] == "agent":
+                return None
+            if p["kind"] == "node":
+                return p["name"]
+            key = p["parent_key"]
+        return None
 
     def on_chain_end(self, outputs, *, run_id, **kw):
         if self.rec.has(run_id):
@@ -158,9 +176,17 @@ def graph_structure(graph: Any) -> dict | None:
         g = graph.get_graph()
     except Exception:
         return None
-    nodes = sorted(n for n in g.nodes if not n.startswith("__"))
+    nodes = {n for n in g.nodes if not n.startswith("__")}
     edges = sorted({(e.source, e.target, bool(e.conditional)) for e in g.edges})
-    return {"nodes": nodes, "edges": [{"source": s, "target": t, "conditional": c} for s, t, c in edges]}
+    try:  # nodes inside compiled subgraphs, named like the trace does: `<agent>/<node>`
+        inner = {n.replace(":", "/") for n in graph.get_graph(xray=True).nodes
+                 if ":" in n and not n.rsplit(":", 1)[-1].startswith("__")}
+    except Exception:
+        inner = set()
+    out = {"nodes": sorted(nodes | inner), "edges": [{"source": s, "target": t, "conditional": c} for s, t, c in edges]}
+    if inner:
+        out["subgraphs"] = sorted({n.split("/")[0] for n in inner})
+    return out
 
 
 def run_graph(graph: Any, input: Any, recorder: Recorder, config: dict | None = None) -> Any:

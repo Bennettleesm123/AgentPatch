@@ -123,6 +123,19 @@ def test_output_failure_without_evidence_step_falls_back_to_last_llm():
     assert "same steps" in texts and "baseline 1, candidate 2" in texts
 
 
+def test_missing_required_tool_points_at_the_model_call_that_should_have_asked():
+    base = make_trace(llm("l1", ["search"], start=0, end=1), tool("t", "search", start=1, end=2),
+                      llm("l2", ["verify"], start=2, end=3), tool("v", "verify", start=3, end=4), llm("l3", start=4, end=5))
+    cand = make_trace(llm("l1", ["search"], start=0, end=1), tool("t", "search", start=1, end=2), llm("l2", start=2, end=3))
+    checks = _check({"type": "tool_order", "sequence": ["search", "verify"]}, {"type": "tool_called", "tool": "verify"})
+    d = diagnose(cand, evaluate_trace(cand, checks), base, evaluate_trace(base, checks))
+    lp = d["likely_failure_point"]
+    assert lp["step"]["id"] == "llm:m#2" and lp["confidence"] == "heuristic"
+    assert "baseline requested `verify`" in lp["rule"]
+    assert any("still bound to the model" in s for s in d["next_steps"])
+    assert any("never called in this run: `verify`" in f["text"] for f in d["facts"])
+
+
 def test_alignment_rows_pair_steps_and_mark_inserts():
     b = make_trace(llm("l1", ["a"], start=0, end=1), tool("t", "a", start=1, end=2))
     c = make_trace(llm("l1", ["a"], start=0, end=1), S("e", "node", "enrich", start=1, end=2), tool("t", "a", start=2, end=3))

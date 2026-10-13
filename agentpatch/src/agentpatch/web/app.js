@@ -103,7 +103,9 @@ function renderPair() {
       location.hash = link(r.view, r.arg, r.q);
     },
   }, runs.map((r) => {
-    const o = h("option", { value: r.run_id }, `${r.label} · ${r.run_id.slice(0, 15)} · ${r.passed}/${r.trials} passed`);
+    const m = r.run_id.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})/);
+    const when = m ? `${m[2]}-${m[3]} ${m[4]}:${m[5]}` : r.run_id;
+    const o = h("option", { value: r.run_id, title: r.run_id }, `${r.label} · ${when} · ${r.passed}/${r.trials}`);
     if (r.run_id === p[which]) o.selected = true;
     return o;
   }));
@@ -222,8 +224,11 @@ async function renderOverview() {
 }
 
 function otherChanges(cmp) {
-  const fixed = cmp.cases.filter((r) => r.change === "fixed");
-  return fixed.length ? h("p", { class: "small muted" }, "Fixed: ", fixed.map((r, i) => [i ? ", " : "", h("a", { href: link("case", r.case_id) }, h("code", null, r.case_id))])) : null;
+  const list = (label, change) => {
+    const rows = cmp.cases.filter((r) => r.change === change);
+    return rows.length ? h("p", { class: "small muted" }, label, rows.map((r, i) => [i ? ", " : "", h("a", { href: link("case", r.case_id) }, h("code", null, r.case_id))])) : null;
+  };
+  return [list("Failing in both runs: ", "still_failing"), list("Fixed: ", "fixed")];
 }
 function sortCases(cases) {
   const order = { regressed: 0, intermittent: 1, still_failing: 2, fixed: 3, added: 4, removed: 5, unchanged: 6 };

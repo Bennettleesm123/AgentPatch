@@ -67,6 +67,24 @@ def test_same_agent_twice_is_no_change(tmp_path):
     assert any("Fewer than 3 trials" in n for n in cmp["notes"])
 
 
+def test_multi_agent_example_regression(tmp_path, monkeypatch):
+    pytest.importorskip("langgraph")
+    suite = load_suite(EXAMPLES / "multi_agent" / "agentpatch.toml")
+    base = run_suite(suite, "baseline", repeats=1, root=tmp_path)
+    monkeypatch.setenv("WRITER_SKIPS_FACTS", "1")
+    cand = run_suite(suite, "candidate", repeats=1, root=tmp_path)
+    cmp = compare(base, cand)
+    assert cmp["verdict"] == "regression"
+    lp = by_case(cmp)["acme"]["diagnosis"]["likely_failure_point"]
+    assert lp["step"]["kind"] == "llm" and "fact_check" in lp["rule"]
+    titles = [f["title"] for f in cmp["findings"]]
+    assert any("Node `writer/tools` ran in baseline" in t for t in titles)
+    assert sum("fact_check" in t for t in titles) == 1  # reported once, not per section
+    same = compare(cand, run_suite(suite, "candidate2", repeats=1, root=tmp_path))
+    assert same["verdict"] == "no_change"
+    assert same["headline"] == "No new regressions, but 1 case failing in both runs (acme)."
+
+
 def _import_agenteval(home):
     suite = load_suite(EXAMPLES / "agenteval_import.toml")
     runs = []
