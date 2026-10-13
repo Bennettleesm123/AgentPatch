@@ -1,0 +1,628 @@
+{
+  "schema": "agenteval.trace.v1",
+  "trace_id": "13943603bd13e84afb1ad2c6a34a0e2f",
+  "run_id": "1dff8721d6df",
+  "case_id": "transient_failure",
+  "config": "candidate",
+  "mode": "offline",
+  "model": "scripted-v1",
+  "outcome": {
+    "status": "completed",
+    "final": {
+      "company": "Globex Analytics",
+      "company_id": "GLBX-001",
+      "conflict": false,
+      "decision": "not_qualified",
+      "reason": "35 employees, region EU",
+      "saved": true
+    },
+    "limit_hit": null
+  },
+  "start_time": "2026-10-12T18:17:14.214990+00:00",
+  "end_time": "2026-10-12T18:17:14.318451+00:00",
+  "latency_ms": 103.462,
+  "spans": [
+    {
+      "span_id": "ff7efc7e634318fb",
+      "parent_id": null,
+      "name": "agent.lead_research",
+      "kind": "agent",
+      "start_time": "2026-10-12T18:17:14.214990+00:00",
+      "end_time": "2026-10-12T18:17:14.318451+00:00",
+      "start_ns": 1791829034214989894,
+      "end_ns": 1791829034318451455,
+      "latency_ms": 103.462,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "authorized": true,
+        "case_id": "transient_failure",
+        "company": "Globex Analytics",
+        "prompt": "Research the company \"Globex Analytics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted."
+      },
+      "output": {
+        "final": {
+          "company": "Globex Analytics",
+          "company_id": "GLBX-001",
+          "conflict": false,
+          "decision": "not_qualified",
+          "reason": "35 employees, region EU",
+          "saved": true
+        },
+        "limit_hit": null,
+        "status": "completed"
+      },
+      "usage": {
+        "input_tokens": 1598,
+        "output_tokens": 134,
+        "total_tokens": 1732,
+        "estimated": true
+      },
+      "attributes": {
+        "agenteval.run_id": "1dff8721d6df",
+        "agenteval.case_id": "transient_failure",
+        "agenteval.config": "candidate",
+        "agenteval.mode": "offline",
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "lead-research",
+        "agenteval.status": "completed",
+        "agenteval.decision": "not_qualified"
+      }
+    },
+    {
+      "span_id": "4929355bda5b01e0",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "llm.turn_1",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.215046+00:00",
+      "end_time": "2026-10-12T18:17:14.215215+00:00",
+      "start_ns": 1791829034215045988,
+      "end_ns": 1791829034215215337,
+      "latency_ms": 0.169,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Globex Analytics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "name": "Globex Analytics"
+            },
+            "id": "call_1_0",
+            "name": "search_company"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 261,
+        "output_tokens": 21,
+        "total_tokens": 282,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "fa9bc8164fe31299",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "tool.search_company",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.215265+00:00",
+      "end_time": "2026-10-12T18:17:14.215444+00:00",
+      "start_ns": 1791829034215264522,
+      "end_ns": 1791829034215443947,
+      "latency_ms": 0.179,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "name": "Globex Analytics"
+      },
+      "output": {
+        "results": [
+          {
+            "company_id": "GLBX-001",
+            "domain": "globex-analytics.example",
+            "name": "Globex Analytics"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "search_company",
+        "gen_ai.tool.call.id": "call_1_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "8b2b3304fe3aa308",
+      "parent_id": "fa9bc8164fe31299",
+      "name": "search_company.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.215293+00:00",
+      "end_time": "2026-10-12T18:17:14.215434+00:00",
+      "start_ns": 1791829034215293417,
+      "end_ns": 1791829034215434218,
+      "latency_ms": 0.141,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "results": [
+          {
+            "company_id": "GLBX-001",
+            "domain": "globex-analytics.example",
+            "name": "Globex Analytics"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "c9b94d1c63d492f7",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "llm.turn_2",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.215493+00:00",
+      "end_time": "2026-10-12T18:17:14.215672+00:00",
+      "start_ns": 1791829034215493412,
+      "end_ns": 1791829034215672218,
+      "latency_ms": 0.179,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Globex Analytics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Globex Analytics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "GLBX-001",
+                  "domain": "globex-analytics.example",
+                  "name": "Globex Analytics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "company_id": "GLBX-001"
+            },
+            "id": "call_3_0",
+            "name": "get_company_details"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 347,
+        "output_tokens": 21,
+        "total_tokens": 368,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "c62a23bcc7eca1af",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "tool.get_company_details",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.215714+00:00",
+      "end_time": "2026-10-12T18:17:14.317354+00:00",
+      "start_ns": 1791829034215714673,
+      "end_ns": 1791829034317354297,
+      "latency_ms": 101.64,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "company_id": "GLBX-001"
+      },
+      "output": {
+        "company_id": "GLBX-001",
+        "domain": "globex-analytics.example",
+        "employees": 35,
+        "industry": "analytics",
+        "name": "Globex Analytics",
+        "region": "EU"
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_company_details",
+        "gen_ai.tool.call.id": "call_3_0",
+        "agenteval.retries": 2
+      }
+    },
+    {
+      "span_id": "63b5d5f0c55368e0",
+      "parent_id": "c62a23bcc7eca1af",
+      "name": "get_company_details.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.215741+00:00",
+      "end_time": "2026-10-12T18:17:14.316318+00:00",
+      "start_ns": 1791829034215741199,
+      "end_ns": 1791829034316317573,
+      "latency_ms": 100.576,
+      "status": "error",
+      "error": "ToolTimeoutError: get_company_details timed out after 0.1s",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1,
+        "error.type": "ToolTimeoutError"
+      }
+    },
+    {
+      "span_id": "22de5fedfad0ef61",
+      "parent_id": "c62a23bcc7eca1af",
+      "name": "get_company_details.attempt_2",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.316478+00:00",
+      "end_time": "2026-10-12T18:17:14.317001+00:00",
+      "start_ns": 1791829034316478388,
+      "end_ns": 1791829034317001012,
+      "latency_ms": 0.523,
+      "status": "error",
+      "error": "TransientToolError: 503 Service Unavailable (synthetic upstream outage)",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 2,
+        "error.type": "TransientToolError"
+      }
+    },
+    {
+      "span_id": "787f87c88d071fdb",
+      "parent_id": "c62a23bcc7eca1af",
+      "name": "get_company_details.attempt_3",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.317104+00:00",
+      "end_time": "2026-10-12T18:17:14.317345+00:00",
+      "start_ns": 1791829034317104115,
+      "end_ns": 1791829034317344690,
+      "latency_ms": 0.241,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "company_id": "GLBX-001",
+        "domain": "globex-analytics.example",
+        "employees": 35,
+        "industry": "analytics",
+        "name": "Globex Analytics",
+        "region": "EU"
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 3
+      }
+    },
+    {
+      "span_id": "34a42ae4620a0dfa",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "llm.turn_3",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.317423+00:00",
+      "end_time": "2026-10-12T18:17:14.317836+00:00",
+      "start_ns": 1791829034317423081,
+      "end_ns": 1791829034317836276,
+      "latency_ms": 0.413,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Globex Analytics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Globex Analytics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "GLBX-001",
+                  "domain": "globex-analytics.example",
+                  "name": "Globex Analytics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "GLBX-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "GLBX-001",
+              "domain": "globex-analytics.example",
+              "employees": 35,
+              "industry": "analytics",
+              "name": "Globex Analytics",
+              "region": "EU"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "result": {
+                "company": "Globex Analytics",
+                "company_id": "GLBX-001",
+                "decision": "not_qualified",
+                "reason": "35 employees, region EU"
+              }
+            },
+            "id": "call_5_0",
+            "name": "save_assessment"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 446,
+        "output_tokens": 48,
+        "total_tokens": 494,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "5a4b414f130e0514",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "tool.save_assessment",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.317892+00:00",
+      "end_time": "2026-10-12T18:17:14.318095+00:00",
+      "start_ns": 1791829034317891929,
+      "end_ns": 1791829034318094874,
+      "latency_ms": 0.203,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "result": {
+          "company": "Globex Analytics",
+          "company_id": "GLBX-001",
+          "decision": "not_qualified",
+          "reason": "35 employees, region EU"
+        }
+      },
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "save_assessment",
+        "gen_ai.tool.call.id": "call_5_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "117e2492871855a7",
+      "parent_id": "5a4b414f130e0514",
+      "name": "save_assessment.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.317921+00:00",
+      "end_time": "2026-10-12T18:17:14.318085+00:00",
+      "start_ns": 1791829034317920702,
+      "end_ns": 1791829034318084811,
+      "latency_ms": 0.164,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "3704dc8efa2f4377",
+      "parent_id": "ff7efc7e634318fb",
+      "name": "llm.turn_4",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.318163+00:00",
+      "end_time": "2026-10-12T18:17:14.318401+00:00",
+      "start_ns": 1791829034318162633,
+      "end_ns": 1791829034318401341,
+      "latency_ms": 0.239,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Globex Analytics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Globex Analytics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "GLBX-001",
+                  "domain": "globex-analytics.example",
+                  "name": "Globex Analytics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "GLBX-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "GLBX-001",
+              "domain": "globex-analytics.example",
+              "employees": 35,
+              "industry": "analytics",
+              "name": "Globex Analytics",
+              "region": "EU"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "result": {
+                    "company": "Globex Analytics",
+                    "company_id": "GLBX-001",
+                    "decision": "not_qualified",
+                    "reason": "35 employees, region EU"
+                  }
+                },
+                "id": "call_5_0",
+                "name": "save_assessment"
+              }
+            ]
+          },
+          {
+            "content": {
+              "assessment_id": "ASM-001",
+              "saved": true
+            },
+            "name": "save_assessment",
+            "role": "tool",
+            "tool_call_id": "call_5_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": "{\"company\": \"Globex Analytics\", \"company_id\": \"GLBX-001\", \"conflict\": false, \"decision\": \"not_qualified\", \"reason\": \"35 employees, region EU\", \"saved\": true}",
+        "tool_calls": []
+      },
+      "usage": {
+        "input_tokens": 544,
+        "output_tokens": 44,
+        "total_tokens": 588,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    }
+  ]
+}

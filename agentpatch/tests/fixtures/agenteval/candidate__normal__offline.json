@@ -1,0 +1,588 @@
+{
+  "schema": "agenteval.trace.v1",
+  "trace_id": "7a420edd2f5e2da329e5e946ef7cc5c1",
+  "run_id": "f4da18829fd1",
+  "case_id": "normal",
+  "config": "candidate",
+  "mode": "offline",
+  "model": "scripted-v1",
+  "outcome": {
+    "status": "completed",
+    "final": {
+      "company": "Acme Robotics",
+      "company_id": "ACME-001",
+      "conflict": false,
+      "decision": "qualified",
+      "reason": "420 employees, region NA",
+      "saved": true
+    },
+    "limit_hit": null
+  },
+  "start_time": "2026-10-12T18:17:14.212096+00:00",
+  "end_time": "2026-10-12T18:17:14.213769+00:00",
+  "latency_ms": 1.672,
+  "spans": [
+    {
+      "span_id": "711409995b448eb9",
+      "parent_id": null,
+      "name": "agent.lead_research",
+      "kind": "agent",
+      "start_time": "2026-10-12T18:17:14.212096+00:00",
+      "end_time": "2026-10-12T18:17:14.213769+00:00",
+      "start_ns": 1791829034212096387,
+      "end_ns": 1791829034213768868,
+      "latency_ms": 1.672,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "authorized": true,
+        "case_id": "normal",
+        "company": "Acme Robotics",
+        "prompt": "Research the company \"Acme Robotics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted."
+      },
+      "output": {
+        "final": {
+          "company": "Acme Robotics",
+          "company_id": "ACME-001",
+          "conflict": false,
+          "decision": "qualified",
+          "reason": "420 employees, region NA",
+          "saved": true
+        },
+        "limit_hit": null,
+        "status": "completed"
+      },
+      "usage": {
+        "input_tokens": 1580,
+        "output_tokens": 130,
+        "total_tokens": 1710,
+        "estimated": true
+      },
+      "attributes": {
+        "agenteval.run_id": "f4da18829fd1",
+        "agenteval.case_id": "normal",
+        "agenteval.config": "candidate",
+        "agenteval.mode": "offline",
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "lead-research",
+        "agenteval.status": "completed",
+        "agenteval.decision": "qualified"
+      }
+    },
+    {
+      "span_id": "3513cf98cbd03e2c",
+      "parent_id": "711409995b448eb9",
+      "name": "llm.turn_1",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.212155+00:00",
+      "end_time": "2026-10-12T18:17:14.212331+00:00",
+      "start_ns": 1791829034212155019,
+      "end_ns": 1791829034212330859,
+      "latency_ms": 0.176,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Acme Robotics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "name": "Acme Robotics"
+            },
+            "id": "call_1_0",
+            "name": "search_company"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 259,
+        "output_tokens": 20,
+        "total_tokens": 279,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "47c745670cb4f4b4",
+      "parent_id": "711409995b448eb9",
+      "name": "tool.search_company",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.212377+00:00",
+      "end_time": "2026-10-12T18:17:14.212570+00:00",
+      "start_ns": 1791829034212377339,
+      "end_ns": 1791829034212569514,
+      "latency_ms": 0.192,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "name": "Acme Robotics"
+      },
+      "output": {
+        "results": [
+          {
+            "company_id": "ACME-001",
+            "domain": "acme-robotics.example",
+            "name": "Acme Robotics"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "search_company",
+        "gen_ai.tool.call.id": "call_1_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "050c6bf190a9c0c9",
+      "parent_id": "47c745670cb4f4b4",
+      "name": "search_company.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.212405+00:00",
+      "end_time": "2026-10-12T18:17:14.212560+00:00",
+      "start_ns": 1791829034212405391,
+      "end_ns": 1791829034212560050,
+      "latency_ms": 0.155,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "results": [
+          {
+            "company_id": "ACME-001",
+            "domain": "acme-robotics.example",
+            "name": "Acme Robotics"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "f71f95e1d75d4a92",
+      "parent_id": "711409995b448eb9",
+      "name": "llm.turn_2",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.212617+00:00",
+      "end_time": "2026-10-12T18:17:14.212818+00:00",
+      "start_ns": 1791829034212617197,
+      "end_ns": 1791829034212817708,
+      "latency_ms": 0.201,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Acme Robotics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Acme Robotics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "ACME-001",
+                  "domain": "acme-robotics.example",
+                  "name": "Acme Robotics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "company_id": "ACME-001"
+            },
+            "id": "call_3_0",
+            "name": "get_company_details"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 343,
+        "output_tokens": 21,
+        "total_tokens": 364,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "b772236d2c2d5164",
+      "parent_id": "711409995b448eb9",
+      "name": "tool.get_company_details",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.212858+00:00",
+      "end_time": "2026-10-12T18:17:14.213039+00:00",
+      "start_ns": 1791829034212857975,
+      "end_ns": 1791829034213039438,
+      "latency_ms": 0.181,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "company_id": "ACME-001"
+      },
+      "output": {
+        "company_id": "ACME-001",
+        "domain": "acme-robotics.example",
+        "employees": 420,
+        "industry": "robotics",
+        "name": "Acme Robotics",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_company_details",
+        "gen_ai.tool.call.id": "call_3_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "57116e4eb87b14ec",
+      "parent_id": "b772236d2c2d5164",
+      "name": "get_company_details.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.212883+00:00",
+      "end_time": "2026-10-12T18:17:14.213032+00:00",
+      "start_ns": 1791829034212883367,
+      "end_ns": 1791829034213031357,
+      "latency_ms": 0.148,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "company_id": "ACME-001",
+        "domain": "acme-robotics.example",
+        "employees": 420,
+        "industry": "robotics",
+        "name": "Acme Robotics",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "6366968f91281cc3",
+      "parent_id": "711409995b448eb9",
+      "name": "llm.turn_3",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.213089+00:00",
+      "end_time": "2026-10-12T18:17:14.213271+00:00",
+      "start_ns": 1791829034213088885,
+      "end_ns": 1791829034213270688,
+      "latency_ms": 0.182,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Acme Robotics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Acme Robotics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "ACME-001",
+                  "domain": "acme-robotics.example",
+                  "name": "Acme Robotics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "ACME-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "ACME-001",
+              "domain": "acme-robotics.example",
+              "employees": 420,
+              "industry": "robotics",
+              "name": "Acme Robotics",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "result": {
+                "company": "Acme Robotics",
+                "company_id": "ACME-001",
+                "decision": "qualified",
+                "reason": "420 employees, region NA"
+              }
+            },
+            "id": "call_5_0",
+            "name": "save_assessment"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 441,
+        "output_tokens": 46,
+        "total_tokens": 487,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "67e4165b74aaf6f5",
+      "parent_id": "711409995b448eb9",
+      "name": "tool.save_assessment",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.213316+00:00",
+      "end_time": "2026-10-12T18:17:14.213496+00:00",
+      "start_ns": 1791829034213316067,
+      "end_ns": 1791829034213496276,
+      "latency_ms": 0.18,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "result": {
+          "company": "Acme Robotics",
+          "company_id": "ACME-001",
+          "decision": "qualified",
+          "reason": "420 employees, region NA"
+        }
+      },
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "save_assessment",
+        "gen_ai.tool.call.id": "call_5_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "2dafc8cfe1b8097c",
+      "parent_id": "67e4165b74aaf6f5",
+      "name": "save_assessment.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.213343+00:00",
+      "end_time": "2026-10-12T18:17:14.213488+00:00",
+      "start_ns": 1791829034213342852,
+      "end_ns": 1791829034213487998,
+      "latency_ms": 0.145,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "08decfa2083c6182",
+      "parent_id": "711409995b448eb9",
+      "name": "llm.turn_4",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.213553+00:00",
+      "end_time": "2026-10-12T18:17:14.213721+00:00",
+      "start_ns": 1791829034213552688,
+      "end_ns": 1791829034213721458,
+      "latency_ms": 0.169,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Acme Robotics\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Acme Robotics"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "ACME-001",
+                  "domain": "acme-robotics.example",
+                  "name": "Acme Robotics"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "ACME-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "ACME-001",
+              "domain": "acme-robotics.example",
+              "employees": 420,
+              "industry": "robotics",
+              "name": "Acme Robotics",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "result": {
+                    "company": "Acme Robotics",
+                    "company_id": "ACME-001",
+                    "decision": "qualified",
+                    "reason": "420 employees, region NA"
+                  }
+                },
+                "id": "call_5_0",
+                "name": "save_assessment"
+              }
+            ]
+          },
+          {
+            "content": {
+              "assessment_id": "ASM-001",
+              "saved": true
+            },
+            "name": "save_assessment",
+            "role": "tool",
+            "tool_call_id": "call_5_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": "{\"company\": \"Acme Robotics\", \"company_id\": \"ACME-001\", \"conflict\": false, \"decision\": \"qualified\", \"reason\": \"420 employees, region NA\", \"saved\": true}",
+        "tool_calls": []
+      },
+      "usage": {
+        "input_tokens": 537,
+        "output_tokens": 43,
+        "total_tokens": 580,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    }
+  ]
+}
