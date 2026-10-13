@@ -355,10 +355,18 @@ function diagnosisPanel(D, C, B) {
         D.decision_step.requested_tools && D.decision_step.requested_tools.length ? `, which requested ${D.decision_step.requested_tools.join(", ")}` : "") : null)
       : h("div", { class: "callout note" }, "No single step explains this failure."),
     h("div", { class: "grid2" },
-      h("div", null, h("h3", null, "What the traces show"), h("ul", { class: "facts" }, D.facts.map((f) => h("li", null, md(f.text), f.cites.filter((c) => !/^(baseline:)?agent:/.test(c)).slice(0, 3).map(citeBtn))))),
+      h("div", null, h("h3", null, "What the traces show"), factsList(D.facts)),
       h("div", null, h("h3", null, "Suggested next steps"), D.next_steps.length ? h("ol", null, D.next_steps.map((s) => h("li", null, md(s)))) : h("p", { class: "muted" }, "—"),
         D.unverified_checks.length ? h("div", { class: "callout note small" }, "Unverified: ", D.unverified_checks.map((c) => [md(c.detail), " "])) : null)),
     h("p", { class: "small muted" }, "Facts cite recorded step ids. The failure point is where to start reading, not a proven root cause."));
+}
+
+function factsList(facts) {
+  const li = (f) => h("li", null, md(f.text), f.cites.filter((c) => !/^(baseline:)?agent:/.test(c)).slice(0, 3).map(citeBtn));
+  const checkFacts = facts.filter((f) => /^Check `/.test(f.text));
+  const rest = facts.filter((f) => !/^Check `/.test(f.text));
+  return h("div", null, h("ul", { class: "facts" }, rest.map(li)),
+    checkFacts.length ? h("details", null, h("summary", null, `Failed check details (${checkFacts.length})`), h("ul", { class: "facts" }, checkFacts.map(li))) : null);
 }
 
 function stepExtra(s) {
