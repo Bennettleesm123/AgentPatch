@@ -1,4 +1,26 @@
-# AgentEvalLab
+# AgentPatch
+
+**Know what broke, why it broke, and whether your agent is still observable.**
+
+AgentPatch is in [`agentpatch/`](agentpatch/README.md). It is a local tool for LangGraph (and plain Python)
+agents. It runs a small suite of cases before and after a change, reports per-case regressions with
+the trace step most likely responsible, and flags instrumentation gaps and structural drift.
+Everything runs offline, and the dashboard is a local web page.
+
+```bash
+cd agentpatch && uv sync && uv run agentpatch demo     # offline LangGraph demo + dashboard
+```
+
+The rest of this repository is research that shaped AgentPatch:
+
+- **AgentEvalLab** (below, `src/agenteval/`) benchmarks LangSmith, Opik, Braintrust and Raindrop on
+  the same agent and traces. Findings are in [`docs/FINDINGS.md`](docs/FINDINGS.md) and
+  [`docs/COMPARISON.md`](docs/COMPARISON.md). AgentPatch reuses its scenarios and can import its traces.
+- **behavioral_testing/** is an earlier experiment that compiles plain-English rules into trace checks.
+
+---
+
+# AgentEvalLab (reference benchmark)
 
 A small Python testbed for comparing the tracing, evaluation, debugging and regression-testing
 experience of **LangSmith, Opik, Braintrust and Raindrop**. Every platform gets the same agent, the same

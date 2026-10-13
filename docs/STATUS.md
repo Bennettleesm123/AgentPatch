@@ -1,5 +1,19 @@
 # Status
 
+## AgentPatch MVP (`agentpatch/`)
+
+| Area | State |
+|---|---|
+| LangGraph capture (callbacks, subgraph agents, graph structure), Python SDK, AgentEvalLab + OTLP import | done, tested |
+| Suites (TOML), deterministic checks with step evidence and "can't verify" | done, tested |
+| Baseline vs candidate comparison, failure diagnosis, coverage gaps and drift | done, tested on the demo, the multi-agent example and AgentEvalLab traces |
+| CLI with CI exit codes and Markdown/JSON reports; local dashboard | done; the dashboard was exercised in a browser |
+| Async (`ainvoke`) and streaming graphs; semantic output checks; retention | not done (see `agentpatch/README.md`, Limitations) |
+
+Tests: `cd agentpatch && uv run pytest`, fully offline.
+
+## AgentEvalLab
+
 | Milestone | State |
 |---|---|
 | 1. Offline agent, synthetic data, tests | done |

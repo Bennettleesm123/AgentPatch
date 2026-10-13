@@ -17,9 +17,10 @@ import time
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
-from .schema import KINDS, Trace, finalize_steps, jsonable, redact_text
+from .schema import KINDS, Trace, finalize_steps, jsonable, redact_text, write_json
 
 _current: contextvars.ContextVar["Recorder | None"] = contextvars.ContextVar("agentpatch_recorder", default=None)
 _parent: contextvars.ContextVar[Any] = contextvars.ContextVar("agentpatch_parent", default=None)
@@ -124,6 +125,14 @@ class Recorder:
                            error=error_text(error), started_at=self.started_at,
                            duration_ms=round(root["end_ms"], 3), source=self.source, steps=steps, meta=self.meta)
         return self.trace
+
+    def save(self, directory: str | Path = "agentpatch_traces") -> Path:
+        """Write the finished trace as `<case>__<trial>.json`, ready for `agentpatch import <directory>`."""
+        from .store import trace_filename
+
+        if self.trace is None:
+            raise RuntimeError("the trace isn't finished yet; call save() after the `with agentpatch.trace()` block")
+        return write_json(Path(directory) / trace_filename(self.case_id, self.trial), self.trace.to_dict())
 
 
 def current() -> Recorder | None:

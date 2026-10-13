@@ -64,6 +64,23 @@ def test_callback_handler_maps_nodes_llm_calls_tools_and_routers():
     assert t.tool_steps("weather")[0].input == {"city": "Paris"}
 
 
+def test_traces_recorded_in_app_code_can_be_saved_and_imported(tmp_path):
+    from agentpatch.cli import main
+    from agentpatch import store
+
+    graph = _graph()
+    for trial in range(2):
+        with agentpatch.trace("weather", input={"q": "paris"}, trial=trial) as rec:
+            rec.set_output(graph.invoke({"messages": [("user", "weather?")]},
+                                        config={"callbacks": [agentpatch.callback_handler()]}))
+        rec.save(tmp_path / "traces")
+        graph = _graph()
+    assert sorted(p.name for p in (tmp_path / "traces").iterdir()) == ["weather__0.json", "weather__1.json"]
+    assert main(["--home", str(tmp_path / "h"), "import", str(tmp_path / "traces"), "--label", "prod"]) == 0
+    [run] = store.list_runs(tmp_path / "h")
+    assert [r["outcome"] for r in run.results()] == ["pass", "pass"]
+
+
 def test_handled_tool_error_is_recorded_on_the_tool_step():
     graph = _graph(fail_tool=True)
     with agentpatch.trace("weather") as rec:
