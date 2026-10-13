@@ -364,6 +364,7 @@ def compare(base_run: Run, cand_run: Run, thresholds: dict | None = None) -> dic
     return {
         "baseline": _run_meta(base_run), "candidate": _run_meta(cand_run), "verdict": verdict,
         "headline": _headline(regressions, fixes, counts, findings), "counts": dict(counts),
+        "observability": _observability(b_cov, c_cov, drift_items),
         "overall": {"baseline": bo, "candidate": co}, "cases": cases, "tools": tool_rows, "errors": error_rows,
         "coverage": {"baseline": b_cov, "candidate": c_cov, "drift": drift_items}, "findings": findings,
         "thresholds": th, "notes": notes,
@@ -380,6 +381,36 @@ _GAP_TITLES = {"unrecorded_tool_call": "model-requested tool calls with no recor
                "expected_node_missing": "expected node never recorded"}
 _CATEGORY_ORDER = {"regression": 0, "errors": 1, "observability": 2, "drift": 3, "tools": 4, "latency": 5,
                    "cost": 6, "fix": 7, "suite": 8}
+
+
+def _observability(b_cov: dict, c_cov: dict, drift_items: list[dict]) -> dict:
+    """One-line answer to "is the candidate still observable?", from verified and possible gaps."""
+    b_items = {i["code"]: i for i in b_cov["summary"]["items"]}
+    c_items = [i for i in c_cov["summary"]["items"] if i["level"] != "info"]
+    verified = [i for i in c_items if i["level"] == "verified"]
+    possible = [i for i in c_items if i["level"] == "possible"]
+    structural = [d for d in drift_items if d["code"] in
+                  ("node_no_longer_observed", "tool_removed", "capture_rate_dropped")]
+
+    def phrase(i):
+        new = "new" if i["code"] not in b_items else f"baseline {b_items[i['code']]['count']}x"
+        return f"{_GAP_TITLES.get(i['code'], i['code'])} ({i['count']}x, {new})"
+
+    if verified:
+        status = "gaps"
+        summary = "Verified instrumentation gaps: " + "; ".join(phrase(i) for i in verified) + "."
+    elif possible or structural:
+        status = "check"
+        summary = "No verified gaps, but worth checking: " + "; ".join(
+            [phrase(i) for i in possible] + [d["message"] for d in structural]) + "."
+    else:
+        status = "ok"
+        summary = "No instrumentation gaps detected in what was recorded."
+    if possible and verified:
+        summary += " Also possible: " + "; ".join(phrase(i) for i in possible) + "."
+    summary += " (Work that never touches the instrumentation can't be seen in traces at all.)"
+    return {"status": status, "summary": summary, "verified": sum(i["count"] for i in verified),
+            "possible": sum(i["count"] for i in possible), "capture": c_cov["structure"]["capture"]}
 
 
 def _run_meta(run: Run) -> dict:

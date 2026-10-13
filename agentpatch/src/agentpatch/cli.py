@@ -167,12 +167,15 @@ def cmd_compare(a, st):
     from .compare import compare
 
     runs = store.list_runs(a.home)
-    if len(runs) < 2 and not (a.baseline and a.candidate):
-        print("need two runs to compare; create them with `agentpatch run --label baseline` and "
-              "`agentpatch run --label candidate` (or try `agentpatch demo`)")
-        return 2
-    base = store.resolve(a.baseline, a.home) if a.baseline else _default_pair(runs)[0]
-    cand = store.resolve(a.candidate, a.home) if a.candidate else _default_pair(runs)[1]
+    if a.baseline and a.candidate:
+        base, cand = store.resolve(a.baseline, a.home), store.resolve(a.candidate, a.home)
+    elif a.baseline:
+        base = store.resolve(a.baseline, a.home)
+        cand = next((r for r in runs if r.id != base.id), None)
+        if cand is None:
+            raise LookupError("need a second run to compare against")
+    else:
+        base, cand = store.default_pair(runs)
     cmp = compare(base, cand)
     if a.md == "-":
         print(compare_markdown(cmp), end="")
@@ -189,17 +192,6 @@ def cmd_compare(a, st):
         print(st.dim("\nDashboard: agentpatch ui"))
     fail = {"regression": {"regression"}, "warning": {"regression", "needs_review"}, "never": set()}[a.fail_on]
     return 1 if cmp["verdict"] in fail else 0
-
-
-def _default_pair(runs):
-    by_label = {}
-    for r in runs:
-        by_label.setdefault(r.label, r)
-    if "baseline" in by_label and "candidate" in by_label:
-        return by_label["baseline"], by_label["candidate"]
-    newest = runs[0]
-    older = next((r for r in runs[1:] if r.label != newest.label), runs[1])
-    return older, newest
 
 
 def cmd_coverage(a, st):

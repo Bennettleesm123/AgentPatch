@@ -51,8 +51,11 @@ def align(base: Trace, cand: Trace) -> dict:
     """Step-level diff of two traces (by kind, name, requested tools and error status)."""
     b, c = _aligned(base), _aligned(cand)
     sm = difflib.SequenceMatcher(a=[signature(s) for s in b], b=[signature(s) for s in c], autojunk=False)
-    blocks, mapping = [], {}
+    blocks, mapping, rows = [], {}, []
     for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        for k in range(max(i2 - i1, j2 - j1)):
+            rows.append({"tag": tag, "baseline": b[i1 + k].id if i1 + k < i2 else None,
+                         "candidate": c[j1 + k].id if j1 + k < j2 else None})
         if tag == "equal":
             for k in range(i2 - i1):
                 mapping[c[j1 + k].id] = b[i1 + k].id
@@ -62,7 +65,7 @@ def align(base: Trace, cand: Trace) -> dict:
                        "candidate_sig": [signature(s) for s in c[j1:j2]],
                        "baseline_before": b[i1 - 1].id if i1 > 0 else None,
                        "candidate_before": c[j1 - 1].id if j1 > 0 else None})
-    return {"blocks": blocks, "mapping": mapping, "identical": not blocks,
+    return {"blocks": blocks, "mapping": mapping, "rows": rows, "identical": not blocks,
             "baseline_steps": len(b), "candidate_steps": len(c)}
 
 

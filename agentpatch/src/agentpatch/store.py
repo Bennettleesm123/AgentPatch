@@ -109,6 +109,21 @@ def resolve(ref: str, root: str | Path | None = None) -> Run:
     raise LookupError(f"no run matches {ref!r} (labels: {known}; see `agentpatch runs`)")
 
 
+def default_pair(runs: list[Run]) -> tuple[Run, Run]:
+    """Latest `baseline` vs latest `candidate`; otherwise the newest run vs the newest run with another label."""
+    if len(runs) < 2:
+        raise LookupError("need two runs to compare; create them with `agentpatch run --label baseline` and "
+                          "`agentpatch run --label candidate` (or try `agentpatch demo`)")
+    by_label: dict[str, Run] = {}
+    for r in runs:
+        by_label.setdefault(r.label, r)
+    if "baseline" in by_label and "candidate" in by_label:
+        return by_label["baseline"], by_label["candidate"]
+    newest = runs[0]
+    older = next((r for r in runs[1:] if r.label != newest.label), runs[1])
+    return older, newest
+
+
 def delete_run(run: Run) -> None:
     if run.dir.parent.name == "runs" and (run.dir / "run.json").is_file():
         shutil.rmtree(run.dir)
