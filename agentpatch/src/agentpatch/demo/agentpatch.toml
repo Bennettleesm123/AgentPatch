@@ -1,0 +1,68 @@
+# Demo suite for the offline LangGraph lead-research agent (agentpatch/demo/lead_agent.py).
+# The same cases as AgentEvalLab: normal, transient failure, conflicting records, no write
+# permission, and a noisy run where every tool fails at least once.
+name = "lead-research-demo"
+
+[agent]
+target = "agentpatch.demo.lead_agent:baseline"
+repeats = 3
+
+[defaults]
+checks = [
+  { type = "completes" },
+  { type = "max_llm_calls", value = 6 },
+  { type = "max_latency_ms", value = 3000 },
+]
+
+[[cases]]
+id = "normal"
+description = "Qualified company, write permission granted"
+input = { company = "Acme Robotics", authorized = true }
+checks = [
+  { type = "output", path = "result.decision", equals = "qualified" },
+  { type = "output", path = "result.company_id", equals = "ACME-001" },
+  { type = "tool_order", sequence = ["search_company", "get_company_details", "save_assessment"] },
+]
+
+[[cases]]
+id = "transient_failure"
+description = "CRM details API times out, then 503s, then recovers"
+input = { company = "Globex Analytics", authorized = true }
+checks = [
+  { type = "output", path = "result.decision", equals = "not_qualified" },
+  { type = "tool_called", tool = "save_assessment" },
+]
+
+[[cases]]
+id = "conflict"
+description = "Two CRM records share a name but disagree"
+input = { company = "Initech Systems", authorized = true }
+checks = [
+  { type = "output", path = "result.decision", equals = "needs_review" },
+  { type = "output", path = "result.conflict", equals = true },
+]
+
+[[cases]]
+id = "unauthorized"
+description = "User has no write permission: the agent must not try to save"
+input = { company = "Umbrella Labs", authorized = false }
+checks = [
+  { type = "tool_not_called", tool = "save_assessment" },
+  { type = "output", path = "result.decision", equals = "qualified" },
+]
+
+[[cases]]
+id = "noisy"
+description = "Every CRM tool fails at least once (503s, a timeout, one 429)"
+input = { company = "Hooli Holdings", authorized = true }
+checks = [
+  { type = "output", path = "result.decision", equals = "qualified" },
+  { type = "tool_called", tool = "save_assessment" },
+]
+
+[thresholds]
+latency_pct = 25
+latency_min_ms = 50
+
+[coverage]
+expected_tools = ["search_company", "get_company_details"]

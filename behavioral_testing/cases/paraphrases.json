@@ -1,0 +1,214 @@
+{
+ "version": 1,
+ "notes": "Held-out compile-only paraphrases, written before the compiler was run on them and not used to tune templates.",
+ "cases": [
+  {
+   "id": "p01",
+   "requirement": "The assistant needs the user's approval before it saves an assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "save_assessment",
+     "event_kind": "approval",
+     "operation": "save_assessment",
+     "scope": "write",
+     "entity_key": "company_id",
+     "trigger_entity_path": "result.company_id"
+    }
+   }
+  },
+  {
+   "id": "p02",
+   "requirement": "save_assessment may only run after the user approves it.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "save_assessment",
+     "event_kind": "approval",
+     "operation": "save_assessment",
+     "scope": "write",
+     "entity_key": "company_id",
+     "trigger_entity_path": "result.company_id"
+    }
+   }
+  },
+  {
+   "id": "p03",
+   "requirement": "Ask for confirmation before you store the assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "requires_prior_event",
+     "trigger_tool": "save_assessment",
+     "event_kind": "approval",
+     "operation": "save_assessment",
+     "scope": "write",
+     "entity_key": "company_id",
+     "trigger_entity_path": "result.company_id"
+    }
+   }
+  },
+  {
+   "id": "p04",
+   "requirement": "If the user is unauthorized, never call save_assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "forbidden_tool_call",
+     "tool": "save_assessment",
+     "when_context": {
+      "authorized": false
+     }
+    }
+   }
+  },
+  {
+   "id": "p05",
+   "requirement": "Don't save the assessment without write permission.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "forbidden_tool_call",
+     "tool": "save_assessment",
+     "when_context": {
+      "authorized": false
+     }
+    }
+   }
+  },
+  {
+   "id": "p06",
+   "requirement": "Never use save_assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "forbidden_tool_call",
+     "tool": "save_assessment",
+     "when_context": {}
+    }
+   }
+  },
+  {
+   "id": "p07",
+   "requirement": "get_company_details may be retried no more than 3 times.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "max_retries",
+     "tool": "get_company_details",
+     "max_retries": 3
+    }
+   }
+  },
+  {
+   "id": "p08",
+   "requirement": "Never retry save_assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "max_retries",
+     "tool": "save_assessment",
+     "max_retries": 0
+    }
+   }
+  },
+  {
+   "id": "p09",
+   "requirement": "Each tool call gets at most three attempts.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "max_retries",
+     "tool": "*",
+     "max_retries": 2
+    }
+   }
+  },
+  {
+   "id": "p10",
+   "requirement": "Only call get_company_details after search_company.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "required_tool_order",
+     "sequence": [
+      "search_company",
+      "get_company_details"
+     ]
+    }
+   }
+  },
+  {
+   "id": "p11",
+   "requirement": "Fetch the company details before you save the assessment.",
+   "expected": {
+    "status": "compiled",
+    "rule": {
+     "type": "required_tool_order",
+     "sequence": [
+      "get_company_details",
+      "save_assessment"
+     ]
+    }
+   }
+  },
+  {
+   "id": "p12",
+   "requirement": "Try not to retry too often.",
+   "expected": {
+    "status": "ambiguous",
+    "rule": null
+   }
+  },
+  {
+   "id": "p13",
+   "requirement": "Be careful when saving.",
+   "expected": {
+    "status": "ambiguous",
+    "rule": null
+   }
+  },
+  {
+   "id": "p14",
+   "requirement": "Call the tools in a sensible order.",
+   "expected": {
+    "status": "ambiguous",
+    "rule": null
+   }
+  },
+  {
+   "id": "p15",
+   "requirement": "The final answer must be valid JSON.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  },
+  {
+   "id": "p16",
+   "requirement": "Never call save_assessment on weekends.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  },
+  {
+   "id": "p17",
+   "requirement": "Do not call delete_company.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  },
+  {
+   "id": "p18",
+   "requirement": "Keep total latency under two seconds.",
+   "expected": {
+    "status": "unsupported",
+    "rule": null
+   }
+  }
+ ]
+}

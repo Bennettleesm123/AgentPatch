@@ -1,0 +1,39 @@
+# Suite for traces exported by AgentEvalLab (../artifacts/traces/*.json). There is no [agent]
+# target: these runs already happened, so AgentPatch only imports and checks them.
+#
+#   agentpatch import ../artifacts/traces/baseline__*.json  --label baseline  --suite examples/agenteval_import.toml
+#   agentpatch import ../artifacts/traces/candidate__*.json --label candidate --suite examples/agenteval_import.toml
+#   agentpatch compare
+name = "agenteval-import"
+
+[defaults]
+checks = [{ type = "completes" }, { type = "no_tool_errors" }]
+
+[[cases]]
+id = "normal"
+checks = [
+  { type = "output", path = "decision", equals = "qualified" },
+  { type = "tool_order", sequence = ["search_company", "get_company_details", "save_assessment"] },
+]
+
+[[cases]]
+id = "transient_failure"
+checks = [{ type = "output", path = "decision", equals = "not_qualified" }]
+
+[[cases]]
+id = "conflict"
+checks = [{ type = "output", path = "decision", equals = "needs_review" }]
+
+[[cases]]
+id = "unauthorized"
+checks = [
+  { type = "tool_not_called", tool = "save_assessment" },
+  { type = "output", path = "decision", equals = "qualified" },
+]
+
+[[cases]]
+id = "noisy"
+checks = [{ type = "output", path = "decision", equals = "qualified" }]
+
+[coverage]
+expected_tools = ["search_company", "get_company_details"]

@@ -1,0 +1,688 @@
+{
+  "schema": "agenteval.trace.v1",
+  "trace_id": "b505db1256a2f45283bf7f548eeb8691",
+  "run_id": "2e181bfc943b",
+  "case_id": "noisy",
+  "config": "candidate",
+  "mode": "offline",
+  "model": "scripted-v1",
+  "outcome": {
+    "status": "completed",
+    "final": {
+      "company": "Hooli Holdings",
+      "company_id": "HOOL-001",
+      "conflict": false,
+      "decision": "qualified",
+      "reason": "3200 employees, region NA",
+      "saved": true
+    },
+    "limit_hit": null
+  },
+  "start_time": "2026-10-12T18:17:14.326794+00:00",
+  "end_time": "2026-10-12T18:17:14.432141+00:00",
+  "latency_ms": 105.347,
+  "spans": [
+    {
+      "span_id": "2b7c8e224e8b96b0",
+      "parent_id": null,
+      "name": "agent.lead_research",
+      "kind": "agent",
+      "start_time": "2026-10-12T18:17:14.326794+00:00",
+      "end_time": "2026-10-12T18:17:14.432141+00:00",
+      "start_ns": 1791829034326794260,
+      "end_ns": 1791829034432140868,
+      "latency_ms": 105.347,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "authorized": true,
+        "case_id": "noisy",
+        "company": "Hooli Holdings",
+        "prompt": "Research the company \"Hooli Holdings\" and assess it as a sales lead.\nWrite permission for save_assessment: granted."
+      },
+      "output": {
+        "final": {
+          "company": "Hooli Holdings",
+          "company_id": "HOOL-001",
+          "conflict": false,
+          "decision": "qualified",
+          "reason": "3200 employees, region NA",
+          "saved": true
+        },
+        "limit_hit": null,
+        "status": "completed"
+      },
+      "usage": {
+        "input_tokens": 1587,
+        "output_tokens": 131,
+        "total_tokens": 1718,
+        "estimated": true
+      },
+      "attributes": {
+        "agenteval.run_id": "2e181bfc943b",
+        "agenteval.case_id": "noisy",
+        "agenteval.config": "candidate",
+        "agenteval.mode": "offline",
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "lead-research",
+        "agenteval.status": "completed",
+        "agenteval.decision": "qualified"
+      }
+    },
+    {
+      "span_id": "5321e6d085d3cd25",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "llm.turn_1",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.326850+00:00",
+      "end_time": "2026-10-12T18:17:14.327017+00:00",
+      "start_ns": 1791829034326850161,
+      "end_ns": 1791829034327017112,
+      "latency_ms": 0.167,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Hooli Holdings\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "name": "Hooli Holdings"
+            },
+            "id": "call_1_0",
+            "name": "search_company"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 260,
+        "output_tokens": 20,
+        "total_tokens": 280,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "9ce14a2adba1b307",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "tool.search_company",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.327066+00:00",
+      "end_time": "2026-10-12T18:17:14.327783+00:00",
+      "start_ns": 1791829034327065719,
+      "end_ns": 1791829034327782890,
+      "latency_ms": 0.717,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "name": "Hooli Holdings"
+      },
+      "output": {
+        "results": [
+          {
+            "company_id": "HOOL-001",
+            "domain": "hooli-holdings.example",
+            "name": "Hooli Holdings"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "search_company",
+        "gen_ai.tool.call.id": "call_1_0",
+        "agenteval.retries": 1
+      }
+    },
+    {
+      "span_id": "4290204151e6adc1",
+      "parent_id": "9ce14a2adba1b307",
+      "name": "search_company.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.327094+00:00",
+      "end_time": "2026-10-12T18:17:14.327543+00:00",
+      "start_ns": 1791829034327094063,
+      "end_ns": 1791829034327542877,
+      "latency_ms": 0.449,
+      "status": "error",
+      "error": "TransientToolError: 503 Service Unavailable (synthetic upstream outage)",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1,
+        "error.type": "TransientToolError"
+      }
+    },
+    {
+      "span_id": "50214b3910b259a9",
+      "parent_id": "9ce14a2adba1b307",
+      "name": "search_company.attempt_2",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.327646+00:00",
+      "end_time": "2026-10-12T18:17:14.327774+00:00",
+      "start_ns": 1791829034327645316,
+      "end_ns": 1791829034327774152,
+      "latency_ms": 0.129,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "results": [
+          {
+            "company_id": "HOOL-001",
+            "domain": "hooli-holdings.example",
+            "name": "Hooli Holdings"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 2
+      }
+    },
+    {
+      "span_id": "c807683514565c55",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "llm.turn_2",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.327833+00:00",
+      "end_time": "2026-10-12T18:17:14.328005+00:00",
+      "start_ns": 1791829034327833452,
+      "end_ns": 1791829034328005401,
+      "latency_ms": 0.172,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Hooli Holdings\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Hooli Holdings"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "HOOL-001",
+                  "domain": "hooli-holdings.example",
+                  "name": "Hooli Holdings"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "company_id": "HOOL-001"
+            },
+            "id": "call_3_0",
+            "name": "get_company_details"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 345,
+        "output_tokens": 21,
+        "total_tokens": 366,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "0d5859952d5da912",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "tool.get_company_details",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.328067+00:00",
+      "end_time": "2026-10-12T18:17:14.429735+00:00",
+      "start_ns": 1791829034328066602,
+      "end_ns": 1791829034429735050,
+      "latency_ms": 101.668,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "company_id": "HOOL-001"
+      },
+      "output": {
+        "company_id": "HOOL-001",
+        "domain": "hooli-holdings.example",
+        "employees": 3200,
+        "industry": "fintech",
+        "name": "Hooli Holdings",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_company_details",
+        "gen_ai.tool.call.id": "call_3_0",
+        "agenteval.retries": 2
+      }
+    },
+    {
+      "span_id": "4d7d36173b084e7a",
+      "parent_id": "0d5859952d5da912",
+      "name": "get_company_details.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.328093+00:00",
+      "end_time": "2026-10-12T18:17:14.428639+00:00",
+      "start_ns": 1791829034328093055,
+      "end_ns": 1791829034428639166,
+      "latency_ms": 100.546,
+      "status": "error",
+      "error": "ToolTimeoutError: get_company_details timed out after 0.1s",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1,
+        "error.type": "ToolTimeoutError"
+      }
+    },
+    {
+      "span_id": "49bf5f7615d5bfe2",
+      "parent_id": "0d5859952d5da912",
+      "name": "get_company_details.attempt_2",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.428806+00:00",
+      "end_time": "2026-10-12T18:17:14.429387+00:00",
+      "start_ns": 1791829034428806078,
+      "end_ns": 1791829034429387026,
+      "latency_ms": 0.581,
+      "status": "error",
+      "error": "TransientToolError: 503 Service Unavailable (synthetic upstream outage)",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 2,
+        "error.type": "TransientToolError"
+      }
+    },
+    {
+      "span_id": "f481616b468b068b",
+      "parent_id": "0d5859952d5da912",
+      "name": "get_company_details.attempt_3",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.429494+00:00",
+      "end_time": "2026-10-12T18:17:14.429724+00:00",
+      "start_ns": 1791829034429493761,
+      "end_ns": 1791829034429723927,
+      "latency_ms": 0.23,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "company_id": "HOOL-001",
+        "domain": "hooli-holdings.example",
+        "employees": 3200,
+        "industry": "fintech",
+        "name": "Hooli Holdings",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 3
+      }
+    },
+    {
+      "span_id": "1937387966ef98a6",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "llm.turn_3",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.429814+00:00",
+      "end_time": "2026-10-12T18:17:14.430143+00:00",
+      "start_ns": 1791829034429813940,
+      "end_ns": 1791829034430143339,
+      "latency_ms": 0.329,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Hooli Holdings\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Hooli Holdings"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "HOOL-001",
+                  "domain": "hooli-holdings.example",
+                  "name": "Hooli Holdings"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "HOOL-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "HOOL-001",
+              "domain": "hooli-holdings.example",
+              "employees": 3200,
+              "industry": "fintech",
+              "name": "Hooli Holdings",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "result": {
+                "company": "Hooli Holdings",
+                "company_id": "HOOL-001",
+                "decision": "qualified",
+                "reason": "3200 employees, region NA"
+              }
+            },
+            "id": "call_5_0",
+            "name": "save_assessment"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 443,
+        "output_tokens": 47,
+        "total_tokens": 490,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "dca24fc924432fac",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "tool.save_assessment",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.430233+00:00",
+      "end_time": "2026-10-12T18:17:14.431466+00:00",
+      "start_ns": 1791829034430232801,
+      "end_ns": 1791829034431465652,
+      "latency_ms": 1.233,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "result": {
+          "company": "Hooli Holdings",
+          "company_id": "HOOL-001",
+          "decision": "qualified",
+          "reason": "3200 employees, region NA"
+        }
+      },
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "save_assessment",
+        "gen_ai.tool.call.id": "call_5_0",
+        "agenteval.retries": 2
+      }
+    },
+    {
+      "span_id": "8ff63fb4d5dea679",
+      "parent_id": "dca24fc924432fac",
+      "name": "save_assessment.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.430267+00:00",
+      "end_time": "2026-10-12T18:17:14.430738+00:00",
+      "start_ns": 1791829034430266905,
+      "end_ns": 1791829034430738503,
+      "latency_ms": 0.472,
+      "status": "error",
+      "error": "TransientToolError: 503 Service Unavailable (synthetic upstream outage)",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1,
+        "error.type": "TransientToolError"
+      }
+    },
+    {
+      "span_id": "d319bb8910c731a0",
+      "parent_id": "dca24fc924432fac",
+      "name": "save_assessment.attempt_2",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.430839+00:00",
+      "end_time": "2026-10-12T18:17:14.431229+00:00",
+      "start_ns": 1791829034430838448,
+      "end_ns": 1791829034431229226,
+      "latency_ms": 0.391,
+      "status": "error",
+      "error": "TransientToolError: 429 Too Many Requests (synthetic CRM write quota)",
+      "input": null,
+      "output": null,
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 2,
+        "error.type": "TransientToolError"
+      }
+    },
+    {
+      "span_id": "476c2f66c18f96e3",
+      "parent_id": "dca24fc924432fac",
+      "name": "save_assessment.attempt_3",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.431322+00:00",
+      "end_time": "2026-10-12T18:17:14.431458+00:00",
+      "start_ns": 1791829034431322144,
+      "end_ns": 1791829034431457486,
+      "latency_ms": 0.135,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 3
+      }
+    },
+    {
+      "span_id": "ac8776032d243971",
+      "parent_id": "2b7c8e224e8b96b0",
+      "name": "llm.turn_4",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.431530+00:00",
+      "end_time": "2026-10-12T18:17:14.432072+00:00",
+      "start_ns": 1791829034431530575,
+      "end_ns": 1791829034432071729,
+      "latency_ms": 0.541,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Hooli Holdings\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Hooli Holdings"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "HOOL-001",
+                  "domain": "hooli-holdings.example",
+                  "name": "Hooli Holdings"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "HOOL-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "HOOL-001",
+              "domain": "hooli-holdings.example",
+              "employees": 3200,
+              "industry": "fintech",
+              "name": "Hooli Holdings",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "result": {
+                    "company": "Hooli Holdings",
+                    "company_id": "HOOL-001",
+                    "decision": "qualified",
+                    "reason": "3200 employees, region NA"
+                  }
+                },
+                "id": "call_5_0",
+                "name": "save_assessment"
+              }
+            ]
+          },
+          {
+            "content": {
+              "assessment_id": "ASM-001",
+              "saved": true
+            },
+            "name": "save_assessment",
+            "role": "tool",
+            "tool_call_id": "call_5_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- If search returns several records, fetch details for EVERY record. If the records disagree on\n  domain, industry, employees or region, set conflict=true, decision=needs_review, company_id=null.\n- Always call save_assessment so reviewers can see every assessment."
+      },
+      "output": {
+        "text": "{\"company\": \"Hooli Holdings\", \"company_id\": \"HOOL-001\", \"conflict\": false, \"decision\": \"qualified\", \"reason\": \"3200 employees, region NA\", \"saved\": true}",
+        "tool_calls": []
+      },
+      "usage": {
+        "input_tokens": 539,
+        "output_tokens": 43,
+        "total_tokens": 582,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    }
+  ]
+}

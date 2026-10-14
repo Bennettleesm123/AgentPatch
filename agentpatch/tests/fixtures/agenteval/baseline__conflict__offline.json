@@ -1,0 +1,613 @@
+{
+  "schema": "agenteval.trace.v1",
+  "trace_id": "235584cfc3564dfef603109d9ce171e7",
+  "run_id": "831460a0237e",
+  "case_id": "conflict",
+  "config": "baseline",
+  "mode": "offline",
+  "model": "scripted-v1",
+  "outcome": {
+    "status": "completed",
+    "final": {
+      "company": "Initech Systems",
+      "company_id": "INIT-001",
+      "conflict": false,
+      "decision": "qualified",
+      "reason": "1200 employees, region NA",
+      "saved": true
+    },
+    "limit_hit": null
+  },
+  "start_time": "2026-10-12T18:17:14.099833+00:00",
+  "end_time": "2026-10-12T18:17:14.101633+00:00",
+  "latency_ms": 1.8,
+  "spans": [
+    {
+      "span_id": "7d228a348a883467",
+      "parent_id": null,
+      "name": "agent.lead_research",
+      "kind": "agent",
+      "start_time": "2026-10-12T18:17:14.099833+00:00",
+      "end_time": "2026-10-12T18:17:14.101633+00:00",
+      "start_ns": 1791829034099832669,
+      "end_ns": 1791829034101632760,
+      "latency_ms": 1.8,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "authorized": true,
+        "case_id": "conflict",
+        "company": "Initech Systems",
+        "prompt": "Research the company \"Initech Systems\" and assess it as a sales lead.\nWrite permission for save_assessment: granted."
+      },
+      "output": {
+        "final": {
+          "company": "Initech Systems",
+          "company_id": "INIT-001",
+          "conflict": false,
+          "decision": "qualified",
+          "reason": "1200 employees, region NA",
+          "saved": true
+        },
+        "limit_hit": null,
+        "status": "completed"
+      },
+      "usage": {
+        "input_tokens": 1523,
+        "output_tokens": 132,
+        "total_tokens": 1655,
+        "estimated": true
+      },
+      "attributes": {
+        "agenteval.run_id": "831460a0237e",
+        "agenteval.case_id": "conflict",
+        "agenteval.config": "baseline",
+        "agenteval.mode": "offline",
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "lead-research",
+        "agenteval.status": "completed",
+        "agenteval.decision": "qualified"
+      }
+    },
+    {
+      "span_id": "91ea31b55efa7969",
+      "parent_id": "7d228a348a883467",
+      "name": "llm.turn_1",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.099894+00:00",
+      "end_time": "2026-10-12T18:17:14.100104+00:00",
+      "start_ns": 1791829034099893903,
+      "end_ns": 1791829034100103906,
+      "latency_ms": 0.21,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Initech Systems\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "name": "Initech Systems"
+            },
+            "id": "call_1_0",
+            "name": "search_company"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 228,
+        "output_tokens": 20,
+        "total_tokens": 248,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "fc8412f7eef44638",
+      "parent_id": "7d228a348a883467",
+      "name": "tool.search_company",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.100161+00:00",
+      "end_time": "2026-10-12T18:17:14.100403+00:00",
+      "start_ns": 1791829034100160981,
+      "end_ns": 1791829034100402703,
+      "latency_ms": 0.242,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "name": "Initech Systems"
+      },
+      "output": {
+        "results": [
+          {
+            "company_id": "INIT-001",
+            "domain": "initech.example",
+            "name": "Initech Systems"
+          },
+          {
+            "company_id": "INIT-002",
+            "domain": "initech-systems.example",
+            "name": "Initech Systems"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "search_company",
+        "gen_ai.tool.call.id": "call_1_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "06eaa79296fe43a9",
+      "parent_id": "fc8412f7eef44638",
+      "name": "search_company.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.100227+00:00",
+      "end_time": "2026-10-12T18:17:14.100392+00:00",
+      "start_ns": 1791829034100226904,
+      "end_ns": 1791829034100391724,
+      "latency_ms": 0.165,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "results": [
+          {
+            "company_id": "INIT-001",
+            "domain": "initech.example",
+            "name": "Initech Systems"
+          },
+          {
+            "company_id": "INIT-002",
+            "domain": "initech-systems.example",
+            "name": "Initech Systems"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "6e00c0f300e23942",
+      "parent_id": "7d228a348a883467",
+      "name": "llm.turn_2",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.100455+00:00",
+      "end_time": "2026-10-12T18:17:14.100652+00:00",
+      "start_ns": 1791829034100454969,
+      "end_ns": 1791829034100652641,
+      "latency_ms": 0.198,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Initech Systems\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Initech Systems"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "INIT-001",
+                  "domain": "initech.example",
+                  "name": "Initech Systems"
+                },
+                {
+                  "company_id": "INIT-002",
+                  "domain": "initech-systems.example",
+                  "name": "Initech Systems"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "company_id": "INIT-001"
+            },
+            "id": "call_3_0",
+            "name": "get_company_details"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 335,
+        "output_tokens": 21,
+        "total_tokens": 356,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "ce99a3dee87e6916",
+      "parent_id": "7d228a348a883467",
+      "name": "tool.get_company_details",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.100695+00:00",
+      "end_time": "2026-10-12T18:17:14.100890+00:00",
+      "start_ns": 1791829034100694965,
+      "end_ns": 1791829034100889948,
+      "latency_ms": 0.195,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "company_id": "INIT-001"
+      },
+      "output": {
+        "company_id": "INIT-001",
+        "domain": "initech.example",
+        "employees": 1200,
+        "industry": "software",
+        "name": "Initech Systems",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_company_details",
+        "gen_ai.tool.call.id": "call_3_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "72cca637c1627dce",
+      "parent_id": "ce99a3dee87e6916",
+      "name": "get_company_details.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.100723+00:00",
+      "end_time": "2026-10-12T18:17:14.100881+00:00",
+      "start_ns": 1791829034100723120,
+      "end_ns": 1791829034100881452,
+      "latency_ms": 0.158,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "company_id": "INIT-001",
+        "domain": "initech.example",
+        "employees": 1200,
+        "industry": "software",
+        "name": "Initech Systems",
+        "region": "NA"
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "01e3b1897e57b339",
+      "parent_id": "7d228a348a883467",
+      "name": "llm.turn_3",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.100941+00:00",
+      "end_time": "2026-10-12T18:17:14.101147+00:00",
+      "start_ns": 1791829034100940721,
+      "end_ns": 1791829034101147365,
+      "latency_ms": 0.207,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Initech Systems\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Initech Systems"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "INIT-001",
+                  "domain": "initech.example",
+                  "name": "Initech Systems"
+                },
+                {
+                  "company_id": "INIT-002",
+                  "domain": "initech-systems.example",
+                  "name": "Initech Systems"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "INIT-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "INIT-001",
+              "domain": "initech.example",
+              "employees": 1200,
+              "industry": "software",
+              "name": "Initech Systems",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "result": {
+                "company": "Initech Systems",
+                "company_id": "INIT-001",
+                "decision": "qualified",
+                "reason": "1200 employees, region NA"
+              }
+            },
+            "id": "call_5_0",
+            "name": "save_assessment"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 432,
+        "output_tokens": 47,
+        "total_tokens": 479,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "7a8ca77b32c4cb4c",
+      "parent_id": "7d228a348a883467",
+      "name": "tool.save_assessment",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.101189+00:00",
+      "end_time": "2026-10-12T18:17:14.101365+00:00",
+      "start_ns": 1791829034101188867,
+      "end_ns": 1791829034101365345,
+      "latency_ms": 0.176,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "result": {
+          "company": "Initech Systems",
+          "company_id": "INIT-001",
+          "decision": "qualified",
+          "reason": "1200 employees, region NA"
+        }
+      },
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "save_assessment",
+        "gen_ai.tool.call.id": "call_5_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "1ddc0b9bb224a3b0",
+      "parent_id": "7a8ca77b32c4cb4c",
+      "name": "save_assessment.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.101214+00:00",
+      "end_time": "2026-10-12T18:17:14.101357+00:00",
+      "start_ns": 1791829034101214192,
+      "end_ns": 1791829034101356525,
+      "latency_ms": 0.142,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "assessment_id": "ASM-001",
+        "saved": true
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "b0eeb887484bbf99",
+      "parent_id": "7d228a348a883467",
+      "name": "llm.turn_4",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.101419+00:00",
+      "end_time": "2026-10-12T18:17:14.101589+00:00",
+      "start_ns": 1791829034101419035,
+      "end_ns": 1791829034101589305,
+      "latency_ms": 0.17,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Initech Systems\" and assess it as a sales lead.\nWrite permission for save_assessment: granted.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Initech Systems"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "INIT-001",
+                  "domain": "initech.example",
+                  "name": "Initech Systems"
+                },
+                {
+                  "company_id": "INIT-002",
+                  "domain": "initech-systems.example",
+                  "name": "Initech Systems"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "INIT-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "INIT-001",
+              "domain": "initech.example",
+              "employees": 1200,
+              "industry": "software",
+              "name": "Initech Systems",
+              "region": "NA"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "result": {
+                    "company": "Initech Systems",
+                    "company_id": "INIT-001",
+                    "decision": "qualified",
+                    "reason": "1200 employees, region NA"
+                  }
+                },
+                "id": "call_5_0",
+                "name": "save_assessment"
+              }
+            ]
+          },
+          {
+            "content": {
+              "assessment_id": "ASM-001",
+              "saved": true
+            },
+            "name": "save_assessment",
+            "role": "tool",
+            "tool_call_id": "call_5_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": "{\"company\": \"Initech Systems\", \"company_id\": \"INIT-001\", \"conflict\": false, \"decision\": \"qualified\", \"reason\": \"1200 employees, region NA\", \"saved\": true}",
+        "tool_calls": []
+      },
+      "usage": {
+        "input_tokens": 528,
+        "output_tokens": 44,
+        "total_tokens": 572,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+{
+  "schema": "agenteval.trace.v1",
+  "trace_id": "52168d31e5b45f7bee230f11467a2786",
+  "run_id": "cf9ea8329ba3",
+  "case_id": "unauthorized",
+  "config": "baseline",
+  "mode": "offline",
+  "model": "scripted-v1",
+  "outcome": {
+    "status": "completed",
+    "final": {
+      "company": "Umbrella Labs",
+      "company_id": "UMBR-001",
+      "conflict": false,
+      "decision": "qualified",
+      "reason": "900 employees, region EU",
+      "saved": false
+    },
+    "limit_hit": null
+  },
+  "start_time": "2026-10-12T18:17:14.102887+00:00",
+  "end_time": "2026-10-12T18:17:14.104108+00:00",
+  "latency_ms": 1.221,
+  "spans": [
+    {
+      "span_id": "1bfd8572c8933c67",
+      "parent_id": null,
+      "name": "agent.lead_research",
+      "kind": "agent",
+      "start_time": "2026-10-12T18:17:14.102887+00:00",
+      "end_time": "2026-10-12T18:17:14.104108+00:00",
+      "start_ns": 1791829034102886531,
+      "end_ns": 1791829034104107646,
+      "latency_ms": 1.221,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "authorized": false,
+        "case_id": "unauthorized",
+        "company": "Umbrella Labs",
+        "prompt": "Research the company \"Umbrella Labs\" and assess it as a sales lead.\nWrite permission for save_assessment: denied."
+      },
+      "output": {
+        "final": {
+          "company": "Umbrella Labs",
+          "company_id": "UMBR-001",
+          "conflict": false,
+          "decision": "qualified",
+          "reason": "900 employees, region EU",
+          "saved": false
+        },
+        "limit_hit": null,
+        "status": "completed"
+      },
+      "usage": {
+        "input_tokens": 947,
+        "output_tokens": 84,
+        "total_tokens": 1031,
+        "estimated": true
+      },
+      "attributes": {
+        "agenteval.run_id": "cf9ea8329ba3",
+        "agenteval.case_id": "unauthorized",
+        "agenteval.config": "baseline",
+        "agenteval.mode": "offline",
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "lead-research",
+        "agenteval.status": "completed",
+        "agenteval.decision": "qualified"
+      }
+    },
+    {
+      "span_id": "8b7388f55966cae6",
+      "parent_id": "1bfd8572c8933c67",
+      "name": "llm.turn_1",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.102942+00:00",
+      "end_time": "2026-10-12T18:17:14.103108+00:00",
+      "start_ns": 1791829034102941592,
+      "end_ns": 1791829034103107774,
+      "latency_ms": 0.166,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Umbrella Labs\" and assess it as a sales lead.\nWrite permission for save_assessment: denied.",
+            "role": "user"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "name": "Umbrella Labs"
+            },
+            "id": "call_1_0",
+            "name": "search_company"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 227,
+        "output_tokens": 20,
+        "total_tokens": 247,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "76344ab2fe3386de",
+      "parent_id": "1bfd8572c8933c67",
+      "name": "tool.search_company",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.103156+00:00",
+      "end_time": "2026-10-12T18:17:14.103339+00:00",
+      "start_ns": 1791829034103155987,
+      "end_ns": 1791829034103338823,
+      "latency_ms": 0.183,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "name": "Umbrella Labs"
+      },
+      "output": {
+        "results": [
+          {
+            "company_id": "UMBR-001",
+            "domain": "umbrella-labs.example",
+            "name": "Umbrella Labs"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "search_company",
+        "gen_ai.tool.call.id": "call_1_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "8217156512c52421",
+      "parent_id": "76344ab2fe3386de",
+      "name": "search_company.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.103183+00:00",
+      "end_time": "2026-10-12T18:17:14.103328+00:00",
+      "start_ns": 1791829034103182629,
+      "end_ns": 1791829034103328465,
+      "latency_ms": 0.146,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "results": [
+          {
+            "company_id": "UMBR-001",
+            "domain": "umbrella-labs.example",
+            "name": "Umbrella Labs"
+          }
+        ]
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "cb94acc30db5279e",
+      "parent_id": "1bfd8572c8933c67",
+      "name": "llm.turn_2",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.103387+00:00",
+      "end_time": "2026-10-12T18:17:14.103602+00:00",
+      "start_ns": 1791829034103387013,
+      "end_ns": 1791829034103602036,
+      "latency_ms": 0.215,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Umbrella Labs\" and assess it as a sales lead.\nWrite permission for save_assessment: denied.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Umbrella Labs"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "UMBR-001",
+                  "domain": "umbrella-labs.example",
+                  "name": "Umbrella Labs"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": null,
+        "tool_calls": [
+          {
+            "args": {
+              "company_id": "UMBR-001"
+            },
+            "id": "call_3_0",
+            "name": "get_company_details"
+          }
+        ]
+      },
+      "usage": {
+        "input_tokens": 311,
+        "output_tokens": 21,
+        "total_tokens": 332,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    },
+    {
+      "span_id": "daa81bca2f283536",
+      "parent_id": "1bfd8572c8933c67",
+      "name": "tool.get_company_details",
+      "kind": "tool",
+      "start_time": "2026-10-12T18:17:14.103649+00:00",
+      "end_time": "2026-10-12T18:17:14.103835+00:00",
+      "start_ns": 1791829034103649013,
+      "end_ns": 1791829034103834708,
+      "latency_ms": 0.186,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "company_id": "UMBR-001"
+      },
+      "output": {
+        "company_id": "UMBR-001",
+        "domain": "umbrella-labs.example",
+        "employees": 900,
+        "industry": "biotech",
+        "name": "Umbrella Labs",
+        "region": "EU"
+      },
+      "usage": null,
+      "attributes": {
+        "gen_ai.operation.name": "execute_tool",
+        "gen_ai.tool.name": "get_company_details",
+        "gen_ai.tool.call.id": "call_3_0",
+        "agenteval.retries": 0
+      }
+    },
+    {
+      "span_id": "c787aa8e31a3f848",
+      "parent_id": "daa81bca2f283536",
+      "name": "get_company_details.attempt_1",
+      "kind": "tool_attempt",
+      "start_time": "2026-10-12T18:17:14.103677+00:00",
+      "end_time": "2026-10-12T18:17:14.103825+00:00",
+      "start_ns": 1791829034103676752,
+      "end_ns": 1791829034103825330,
+      "latency_ms": 0.149,
+      "status": "ok",
+      "error": null,
+      "input": null,
+      "output": {
+        "company_id": "UMBR-001",
+        "domain": "umbrella-labs.example",
+        "employees": 900,
+        "industry": "biotech",
+        "name": "Umbrella Labs",
+        "region": "EU"
+      },
+      "usage": null,
+      "attributes": {
+        "agenteval.attempt": 1
+      }
+    },
+    {
+      "span_id": "2758eddc5206ba1b",
+      "parent_id": "1bfd8572c8933c67",
+      "name": "llm.turn_3",
+      "kind": "llm",
+      "start_time": "2026-10-12T18:17:14.103886+00:00",
+      "end_time": "2026-10-12T18:17:14.104064+00:00",
+      "start_ns": 1791829034103885509,
+      "end_ns": 1791829034104064528,
+      "latency_ms": 0.179,
+      "status": "ok",
+      "error": null,
+      "input": {
+        "messages": [
+          {
+            "content": "Research the company \"Umbrella Labs\" and assess it as a sales lead.\nWrite permission for save_assessment: denied.",
+            "role": "user"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "name": "Umbrella Labs"
+                },
+                "id": "call_1_0",
+                "name": "search_company"
+              }
+            ]
+          },
+          {
+            "content": {
+              "results": [
+                {
+                  "company_id": "UMBR-001",
+                  "domain": "umbrella-labs.example",
+                  "name": "Umbrella Labs"
+                }
+              ]
+            },
+            "name": "search_company",
+            "role": "tool",
+            "tool_call_id": "call_1_0"
+          },
+          {
+            "content": null,
+            "role": "assistant",
+            "tool_calls": [
+              {
+                "args": {
+                  "company_id": "UMBR-001"
+                },
+                "id": "call_3_0",
+                "name": "get_company_details"
+              }
+            ]
+          },
+          {
+            "content": {
+              "company_id": "UMBR-001",
+              "domain": "umbrella-labs.example",
+              "employees": 900,
+              "industry": "biotech",
+              "name": "Umbrella Labs",
+              "region": "EU"
+            },
+            "name": "get_company_details",
+            "role": "tool",
+            "tool_call_id": "call_3_0"
+          }
+        ],
+        "system": "You are a B2B lead-research agent. Use the tools to research the requested company, then assess it.\nIdeal customer profile (ICP): region is NA or EU AND employees between 50 and 5000 inclusive.\ndecision must be one of: qualified, not_qualified, needs_review, not_found.\nNever invent data; only use tool results. If a tool fails transiently it will be retried for you.\nWhen finished, reply with ONLY a JSON object (no prose, no code fences) with keys:\ncompany, company_id (string or null), decision, conflict (boolean), saved (boolean), reason.\nPolicy:\n- Use the top search result only and fetch its details.\n- Call save_assessment only if the user message says write permission is granted."
+      },
+      "output": {
+        "text": "{\"company\": \"Umbrella Labs\", \"company_id\": \"UMBR-001\", \"conflict\": false, \"decision\": \"qualified\", \"reason\": \"900 employees, region EU\", \"saved\": false}",
+        "tool_calls": []
+      },
+      "usage": {
+        "input_tokens": 409,
+        "output_tokens": 43,
+        "total_tokens": 452,
+        "estimated": true
+      },
+      "attributes": {
+        "gen_ai.operation.name": "chat",
+        "gen_ai.system": "scripted",
+        "gen_ai.request.model": "scripted-v1",
+        "gen_ai.response.model": "scripted-v1",
+        "agenteval.model.retries": 0
+      }
+    }
+  ]
+}

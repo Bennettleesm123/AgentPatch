@@ -1,0 +1,33 @@
+[project]
+name = "agenteval"
+version = "0.1.0"
+description = "AgentEvalLab: a tiny lead-research agent for comparing LLM observability/eval platforms"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "opentelemetry-sdk>=1.25",
+]
+
+[project.optional-dependencies]
+gemini = ["google-genai>=1.0"]
+langsmith = ["langsmith>=0.3"]
+opik = ["opik>=1.7"]
+braintrust = ["braintrust>=0.1"]
+raindrop = ["raindrop-ai>=0.0.30"]
+
+[project.scripts]
+agenteval = "agenteval.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agenteval"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
