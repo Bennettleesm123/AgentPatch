@@ -12,6 +12,11 @@ def _get(api, path):
     return status, json.loads(body)
 
 
+def test_compare_cases_include_the_scenario_description(demo_cmp):
+    row = next(r for r in demo_cmp["cases"] if r["case_id"] == "unauthorized")
+    assert "write permission" in row["description"]
+
+
 def test_runs_record_case_descriptions_and_inputs(demo_home):
     info = store.resolve("baseline", demo_home).info["case_info"]
     assert info["unauthorized"]["input"] == {"company": "Umbrella Labs", "authorized": False}

@@ -132,11 +132,11 @@ async function loadExperiment() {
 
 // ---------- chrome ----------
 const NAV = [
-  [null, [["overview", "Overview", "home"]]],
+  [null, [["overview", "Home", "home"]]],
   ["Observability", [["observability", "Coverage & drift", "eye"], ["experiments", "Experiments", "flask"], ["traces", "Traces", "list"], ["datasets", "Datasets", "db"]]],
   ["Store", [["runs", "Runs", "clock"]]],
 ];
-const TITLES = { overview: "Overview", case: "Case", observability: "Coverage & drift", experiments: "Experiments", traces: "Traces", datasets: "Datasets", runs: "Runs" };
+const TITLES = { overview: "Home", case: "Case", observability: "Coverage & drift", experiments: "Experiments", traces: "Traces", datasets: "Datasets", runs: "Runs" };
 const PAIR_VIEWS = new Set(["overview", "case", "observability", "experiments"]);
 
 function renderNav(view) {
@@ -151,7 +151,7 @@ function renderNav(view) {
 function renderCrumbs(view, arg, extra) {
   const el = document.getElementById("crumbs");
   const parts = [];
-  if (view === "case") parts.push(h("a", { href: link("overview") }, "Overview"), h("span", { class: "sep" }, "/"), h("span", { class: "cur" }, arg));
+  if (view === "case") parts.push(h("a", { href: link("overview") }, "Home"), h("span", { class: "sep" }, "/"), h("span", { class: "cur" }, arg));
   else if (view === "datasets" && arg) parts.push(h("a", { href: link("datasets") }, "Datasets"), h("span", { class: "sep" }, "/"), h("span", { class: "cur" }, arg));
   else {
     if (["observability", "experiments", "traces", "datasets"].includes(view)) parts.push(h("span", null, "Observability"), h("span", { class: "sep" }, "/"));
@@ -518,75 +518,112 @@ const COLOR_A = "#14b8a6", COLOR_B = "#8b5cf6";
 
 // ---------- overview ----------
 const CHANGE_LABEL = { regressed: "regressed", intermittent: "intermittent", fixed: "fixed", still_failing: "still failing", unchanged: "unchanged", added: "new case", removed: "removed" };
+const PLAIN_CHANGE = { regressed: "got worse", intermittent: "sometimes", fixed: "fixed", still_failing: "still broken", unchanged: "same", added: "new", removed: "removed" };
 const OBS_LABEL = { ok: "Observable", check: "Check coverage", gaps: "Gaps found" };
+const PLAIN_OBS = { ok: "Recorded", check: "Worth a look", gaps: "Gaps" };
+
+function deTick(s) { return String(s || "").replace(/`/g, ""); }
+
+function plainHeadline(cmp) {
+  const n = (ch) => cmp.cases.filter((r) => r.change === ch).length;
+  const worse = n("regressed") + n("intermittent");
+  const parts = [];
+  if (worse) parts.push(`${worse} scenario${worse === 1 ? "" : "s"} got worse`);
+  if (n("fixed")) parts.push(`${n("fixed")} fixed`);
+  if (n("still_failing")) parts.push(`${n("still_failing")} still broken`);
+  if (cmp.observability.status === "gaps") parts.push("recording has gaps");
+  else if (cmp.observability.status === "check") parts.push("recording needs a look");
+  return (parts.join(", ") || "Nothing got worse") + ".";
+}
+
+function attentionLine(r) {
+  const bad = r.checks.filter((c) => c.change === "regressed" || c.change === "failing");
+  const text = bad.slice(0, 2).map((c) => deTick(c.description)).join(" · ");
+  if (text) return text;
+  if (r.change === "intermittent") return "Fails on some runs, not every run.";
+  if (r.change === "still_failing") return "This was already failing before the change.";
+  return "This scenario got worse.";
+}
+
+function recordingBlurb(cmp) {
+  const ob = cmp.observability;
+  const lead = ob.status === "ok"
+    ? "Recording kept up with this change. The traces still cover what the checks rely on."
+    : ob.status === "gaps"
+      ? "Part of the new behavior is not in the trace, so a pass rate alone can miss it."
+      : "Nothing is clearly missing, but a few spots are worth a look before you trust the numbers.";
+  const extra = cmp.findings
+    .filter((f) => f.severity !== "info" && ["observability", "drift", "coverage"].includes(f.category))
+    .slice(0, 2)
+    .map((f) => deTick(f.title).replace(/^(Verified gap|Possible gap):\s*/i, ""));
+  return { lead, extra };
+}
 
 async function renderOverview() {
   const cmp = await loadCompare();
   if (!cmp) return renderSingle();
-  const broke = cmp.cases.filter((r) => ["regressed", "intermittent"].includes(r.change));
-  const caseLink = (r, extra = {}) => link("case", r.case_id, extra);
+  const count = (ch) => cmp.cases.filter((r) => r.change === ch).length;
+  const worse = count("regressed") + count("intermittent");
+  const attention = sortCases(cmp.cases.filter((r) => ["regressed", "intermittent", "still_failing"].includes(r.change)));
+  const fixed = cmp.cases.filter((r) => r.change === "fixed");
+  const ob = cmp.observability;
+  const rec = recordingBlurb(cmp);
+  const stat = (k, v, bad) => h("div", { class: "stat" }, h("div", { class: "k" }, k), h("div", { class: `v ${bad ? "bad" : ""}` }, v));
 
   const verdict = h("div", { class: `panel verdict ${cmp.verdict}` },
     h("span", { class: "label" }, cmp.verdict.replace("_", " ").toUpperCase()),
-    h("div", null, h("div", { class: "headline" }, cmp.headline),
+    h("div", null, h("div", { class: "headline" }, plainHeadline(cmp)),
+      h("div", { class: "muted small" }, "The short version is below. Traces, scores, and step-by-step evidence are one click away."),
       h("div", { class: "chips" }, runChip("a", cmp.baseline), h("span", { class: "muted" }, "→"), runChip("b", cmp.candidate))));
 
-  const q1 = h("div", { class: "panel q" }, h("h2", null, h("span", { class: "num" }, "1"), "What broke?"),
-    broke.length ? h("ul", null, sortCases(broke).map((r) => h("li", null, h("a", { href: caseLink(r) }, h("code", null, r.case_id)), " ",
-      badge(r.change, CHANGE_LABEL[r.change]), " ", h("span", { class: "muted" }, `${rate(r.baseline)} → ${rate(r.candidate)} trials pass`))))
-      : h("p", { class: "muted" }, "No case got worse on its checks."),
-    otherChanges(cmp),
-    h("div", { class: "foot small" }, h("a", { href: link("experiments") }, "Compare every case side by side →")));
+  const numbers = h("div", { class: "stats" },
+    stat("Got worse", worse, worse > 0),
+    stat("Fixed", count("fixed"), false),
+    stat("Still broken", count("still_failing"), count("still_failing") > 0),
+    stat("Recording", PLAIN_OBS[ob.status], ob.status === "gaps"));
 
-  const q2 = h("div", { class: "panel q" }, h("h2", null, h("span", { class: "num" }, "2"), "Why? (where to look)"),
-    broke.length ? h("ul", null, sortCases(broke).map((r) => {
-      const lp = r.diagnosis && r.diagnosis.likely_failure_point;
-      if (!lp) return h("li", null, h("code", null, r.case_id), ": no single step explains it; ", h("a", { href: caseLink(r) }, "compare outputs"));
-      return h("li", null, h("code", null, r.case_id), " → ",
-        h("a", { href: caseLink(r, { ct: r.diagnosis.trial, bt: r.diagnosis.baseline_trial, step: lp.step.id }) }, h("code", null, lp.step.id)), " ",
-        badge(lp.confidence, lp.confidence === "evidence" ? "check evidence" : "heuristic", lp.rule),
-        lp.error_hint ? h("div", { class: "small muted" }, lp.error_hint) : null);
-    })) : h("p", { class: "muted" }, "Nothing to diagnose."),
-    h("div", { class: "foot small muted" }, "Likely failure points are where to start reading, chosen by fixed rules, not proven root causes."));
+  const list = h("div", { class: "panel" },
+    h("h2", null, "What needs a look"),
+    h("p", { class: "muted small" }, "Each row is a scenario, not a trace. Open it when you want the step that failed."),
+    attention.length ? attention.map((r) => h("a", { class: "glance", href: link("case", r.case_id) },
+      h("div", null, h("div", { class: "what" }, r.description || r.case_id),
+        r.description ? h("div", { class: "small muted" }, r.case_id) : null,
+        h("div", { class: "why small" }, attentionLine(r))),
+      badge(r.change, PLAIN_CHANGE[r.change]),
+      h("span", { class: "rate" }, `${rate(r.baseline)} → ${rate(r.candidate)}`)))
+      : h("p", null, "Nothing got worse, and nothing was already failing."),
+    fixed.length ? h("p", { class: "small muted" }, "Fixed: ", fixed.map((r, i) => [i ? ", " : "", h("a", { href: link("case", r.case_id) }, r.description || r.case_id)])) : null);
 
-  const ob = cmp.observability;
-  const q3 = h("div", { class: "panel q" }, h("h2", null, h("span", { class: "num" }, "3"), "Still observable?"),
-    h("div", null, badge(ob.status, OBS_LABEL[ob.status])),
-    h("p", { class: "small" }, md(ob.summary)),
-    h("div", { class: "foot small" }, h("a", { href: link("observability") }, "Coverage & drift →"), "  ·  ", h("a", { href: link("traces", null, { run: cmp.candidate.run_id }) }, "Browse traces →")));
+  const recording = h("div", { class: `panel callout ${ob.status === "ok" ? "okay" : ob.status === "gaps" ? "point" : "note"}` },
+    h("h2", null, "Still being recorded? ", badge(ob.status, PLAIN_OBS[ob.status])),
+    h("p", null, rec.lead),
+    rec.extra.length ? h("ul", null, rec.extra.map((t) => h("li", null, t))) : null,
+    h("p", { class: "small muted" }, "Detected from the traces themselves. When the agent gains a step or a tool, this updates without rewiring the dashboard. Work that never emits a trace still can't be seen."),
+    h("div", { class: "small" }, h("a", { href: link("observability") }, "What isn't recorded"), "  ·  ",
+      h("a", { href: link("traces", null, { run: cmp.candidate.run_id }) }, "Browse traces"), "  ·  ",
+      h("a", { href: link("experiments") }, "Scores by scenario")));
 
   const all = cmp.findings;
-  const main = all.filter((f) => f.severity !== "info");
-  const info = all.filter((f) => f.severity === "info");
-  const findings = h("div", { class: "panel" }, h("h2", null, "What changed, most important first"),
-    main.length ? main.map(findingEl) : h("p", { class: "muted" }, "No critical or warning findings."),
-    info.length ? h("details", { open: main.length === 0 ? true : null }, h("summary", null, `${info.length} informational finding(s): fixes and neutral changes`), info.map(findingEl)) : null,
-    cmp.notes.map((n) => h("div", { class: "callout note small" }, n)));
+  const engineer = h("details", { class: "panel" },
+    h("summary", null, `Engineer details (${all.length} findings, evidence and per-scenario checks)`),
+    h("p", { class: "small muted" }, cmp.headline),
+    all.map(findingEl),
+    cmp.notes.map((n) => h("div", { class: "callout note small" }, n)),
+    h("h3", null, "Every scenario"),
+    h("table", null, h("tr", null, h("th", null, "scenario"), h("th", null, "result"), h("th", { class: "num" }, "before"), h("th", { class: "num" }, "after"), h("th", { class: "num" }, "speed")),
+      sortCases(cmp.cases).map((r) => h("tr", { class: "clickable", onclick: () => go("case", r.case_id) },
+        h("td", null, r.description ? h("div", null, r.description) : null, h("code", null, r.case_id)),
+        h("td", null, badge(r.change, PLAIN_CHANGE[r.change])),
+        h("td", { class: "num" }, rate(r.baseline)), h("td", { class: "num" }, rate(r.candidate)),
+        h("td", { class: "num" }, latencyCell(r.latency))))));
 
-  const cases = h("div", { class: "panel" }, h("h2", null, "Cases"),
-    h("table", null, h("tr", null, h("th", null, "case"), h("th", null, "change"), h("th", { class: "num" }, "baseline"), h("th", { class: "num" }, "candidate"),
-      h("th", { class: "num" }, "p50 latency"), h("th", null, "checks that changed")),
-    sortCases(cmp.cases).map((r) => h("tr", { class: "clickable", onclick: () => go("case", r.case_id) },
-      h("td", null, h("code", null, r.case_id)), h("td", null, badge(r.change, CHANGE_LABEL[r.change])),
-      h("td", { class: "num" }, rate(r.baseline)), h("td", { class: "num" }, rate(r.candidate)),
-      h("td", { class: "num" }, latencyCell(r.latency)),
-      h("td", { class: "small" }, r.checks.filter((c) => ["regressed", "fixed"].includes(c.change)).map((c) =>
-        h("div", null, badge(c.change), " ", md(c.description))))))));
-
-  $app.replaceChildren(verdict, h("div", { class: "grid3" }, q1, q2, q3), findings, cases, metricsPanel(cmp));
+  $app.replaceChildren(verdict, numbers, list, recording, engineer, metricsPanel(cmp));
 }
 
 function runChip(side, m) {
   const git = m.git && m.git.commit ? ` @ ${m.git.commit}${m.git.dirty ? "+dirty" : ""}` : "";
   return h("span", { class: "chip", title: m.run_id }, h("span", { class: `sw2 ${side}` }, side === "a" ? "A" : "B"), h("b", null, m.label),
     h("span", { class: "meta" }, `${m.run_id}${git}${m.repeats ? `, ${m.repeats}x per case` : ""}`));
-}
-function otherChanges(cmp) {
-  const list = (label, change) => {
-    const rows = cmp.cases.filter((r) => r.change === change);
-    return rows.length ? h("p", { class: "small muted" }, label, rows.map((r, i) => [i ? ", " : "", h("a", { href: link("case", r.case_id) }, h("code", null, r.case_id))])) : null;
-  };
-  return [list("Failing in both runs: ", "still_failing"), list("Fixed: ", "fixed")];
 }
 function sortCases(cases) {
   const order = { regressed: 0, intermittent: 1, still_failing: 2, fixed: 3, added: 4, removed: 5, unchanged: 6 };

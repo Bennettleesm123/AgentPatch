@@ -163,6 +163,12 @@ table.exp tr.sel td { background: var(--accent-bg) !important; }
 .q ul { margin: 0; padding-left: 18px; }
 .q li { margin-bottom: 6px; }
 .q .foot { margin-top: auto; padding-top: 8px; }
+.glance { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; padding: 12px 4px; border-top: 1px solid var(--line); color: inherit; }
+.glance:first-of-type { border-top: 0; }
+.glance:hover { text-decoration: none; background: var(--hover); border-radius: 8px; }
+.glance .what { font-weight: 600; }
+.glance .why { font-weight: 400; color: var(--ink2); }
+.glance .rate { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 .finding { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line); }
 .finding:first-of-type { border-top: 0; }
 .finding .fid { font-family: var(--mono); font-size: 12px; font-weight: 700; padding-top: 2px; color: var(--muted); }

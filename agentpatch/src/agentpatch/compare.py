@@ -172,12 +172,18 @@ def compare(base_run: Run, cand_run: Run, thresholds: dict | None = None) -> dic
         findings.append({"severity": severity, "category": category, "title": title, "detail": detail,
                          "cases": list(cases), "evidence": list(evidence), **extra})
 
+    descriptions = {}
+    for run in (base_run, cand_run):
+        for cid, meta in (run.info.get("case_info") or {}).items():
+            desc = (meta or {}).get("description") or ""
+            if desc:
+                descriptions.setdefault(cid, desc)
     cases, slow = [], []
     all_ids = list(dict.fromkeys(list(b.by_case) + list(c.by_case)))
     for cid in all_ids:
         bs, cs = b.case_stats(cid), c.case_stats(cid)
-        row = {"case_id": cid, "baseline": bs, "candidate": cs, "checks": [], "diagnosis": None,
-               "latency": None}
+        row = {"case_id": cid, "description": descriptions.get(cid, ""), "baseline": bs, "candidate": cs,
+               "checks": [], "diagnosis": None, "latency": None}
         if not bs["trials"] or not cs["trials"]:
             row["change"] = "added" if not bs["trials"] else "removed"
             add("info", "suite", f"Case `{cid}` only ran in the {'candidate' if row['change'] == 'added' else 'baseline'}",

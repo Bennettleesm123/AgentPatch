@@ -220,8 +220,8 @@ port can read your traces.
 
 The pair picker at the top sets run **A** (baseline) and run **B** (candidate).
 
-- **Overview:** the verdict, the three questions, ranked findings with evidence links, and per-case
-  changes.
+- **Home:** a short summary. How many scenarios got worse, which ones, and whether the new behavior
+  is still being recorded. Findings, step ids, and per-check evidence sit under "Engineer details".
 - **Case:** the checks per run, and why the selected candidate trial failed (failure point, cited
   facts, next steps). Below that is a step-by-step diff of A and B, with the failure point highlighted
   and unchanged stretches collapsed, then both full traces in the trace explorer.
